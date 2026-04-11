@@ -63,6 +63,9 @@ export function registerOAuthRoutes(app: Express) {
     try {
       const adminOpenId = "admin_local_01";
       const adminName = "Administrador Master";
+      const recordAppId = ENV.appId && ENV.appId.length > 0 ? ENV.appId : "admin_local_app";
+
+      console.log(`[AdminAuth] Attempting login for ${adminName} with appId: ${recordAppId}`);
 
       // Ensure admin user exists in DB
       await db.upsertUser({
@@ -73,14 +76,23 @@ export function registerOAuthRoutes(app: Express) {
         lastSignedIn: new Date(),
       });
 
-      const sessionToken = await sdk.createSessionToken(adminOpenId, {
+      const sessionToken = await sdk.signSession({
+        openId: adminOpenId,
         name: adminName,
+        appId: recordAppId
+      }, {
         expiresInMs: ONE_YEAR_MS,
       });
 
       const cookieOptions = getSessionCookieOptions(req);
-      res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+      res.cookie(COOKIE_NAME, sessionToken, { 
+        ...cookieOptions, 
+        maxAge: ONE_YEAR_MS,
+        secure: true, // Force secure since we are on HTTPS
+        sameSite: "lax"
+      });
 
+      console.log("[AdminAuth] Login successful, cookie set.");
       res.status(200).json({ success: true });
     } catch (error) {
       console.error("[AdminAuth] Login failed", error);
