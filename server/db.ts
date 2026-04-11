@@ -184,6 +184,24 @@ export async function updateMatchScore(
     .where(eq(matches.id, matchId));
 }
 
+export async function updateMatchDetails(
+  matchId: number,
+  matchDate?: string,
+  matchTime?: string,
+  location?: string
+) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db
+    .update(matches)
+    .set({
+      ...(matchDate !== undefined ? { matchDate } : {}),
+      ...(matchTime !== undefined ? { matchTime } : {}),
+      ...(location !== undefined ? { location } : {}),
+    })
+    .where(eq(matches.id, matchId));
+}
+
 export async function getMatchById(matchId: number) {
   const db = await getDb();
   if (!db) return undefined;

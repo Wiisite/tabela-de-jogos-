@@ -126,8 +126,7 @@ export default function CreateTournament() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "oklch(0.1 0.015 260)" }}>
-      {/* Header */}
+    <div className="min-h-screen bg-background">
       <header className="border-b border-border/50 sticky top-0 z-50 glass">
         <div className="container flex items-center justify-between h-16">
           <div className="flex items-center gap-3">

@@ -13,9 +13,13 @@ import {
   CheckCircle2,
   Clock,
   Shield,
+  Download,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 
 type Tab = "groups" | "standings" | "bracket" | "semifinals" | "final";
 
@@ -53,6 +57,9 @@ type MatchForModal = {
   homePenalties?: number | null;
   awayPenalties?: number | null;
   phase?: string;
+  matchDate?: string | null;
+  matchTime?: string | null;
+  location?: string | null;
 };
 
 function ScoreModal({
@@ -64,7 +71,7 @@ function ScoreModal({
   match: MatchForModal;
   teams: { id: number; name: string; shortName: string; color: string }[];
   onClose: () => void;
-  onSave: (matchId: number, home: number, away: number, hp?: number, ap?: number) => void;
+  onSave: (matchId: number, home: number, away: number, hp?: number, ap?: number, date?: string, time?: string, loc?: string) => void;
 }) {
   const homeTeam = teams.find((t) => t.id === match.homeTeamId);
   const awayTeam = teams.find((t) => t.id === match.awayTeamId);
@@ -72,6 +79,10 @@ function ScoreModal({
   const [away, setAway] = useState(match.awayScore ?? 0);
   const [hp, setHp] = useState(match.homePenalties ?? 0);
   const [ap, setAp] = useState(match.awayPenalties ?? 0);
+  
+  const [date, setDate] = useState(match.matchDate ?? "");
+  const [time, setTime] = useState(match.matchTime ?? "");
+  const [loc, setLoc] = useState(match.location ?? "");
 
   const isKnockout = match.phase !== "group";
   const isDraw = home === away;
@@ -136,13 +147,47 @@ function ScoreModal({
           </div>
         )}
 
+        <div className="space-y-3 mb-6 p-4 border border-border/40 rounded-xl bg-background/50">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Detalhes da Partida</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[10px] text-muted-foreground font-medium mb-1 block">Data</label>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="w-full h-8 px-2 text-xs bg-input border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] text-muted-foreground font-medium mb-1 block">Horário</label>
+              <input
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                className="w-full h-8 px-2 text-xs bg-input border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-[10px] text-muted-foreground font-medium mb-1 block">Local</label>
+            <input
+              type="text"
+              placeholder="Ex: Ginásio Principal"
+              value={loc}
+              onChange={(e) => setLoc(e.target.value)}
+              className="w-full h-8 px-3 text-xs bg-input border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+          </div>
+        </div>
+
         <div className="flex gap-3">
           <Button variant="outline" className="flex-1" onClick={onClose}>
             Cancelar
           </Button>
           <Button
             className="flex-1 gradient-gold text-amber-950 font-semibold hover:opacity-90 shadow-gold"
-            onClick={() => onSave(match.id, home, away, isKnockout && isDraw ? hp : undefined, isKnockout && isDraw ? ap : undefined)}
+            onClick={() => onSave(match.id, home, away, isKnockout && isDraw ? hp : undefined, isKnockout && isDraw ? ap : undefined, date, time, loc)}
           >
             Salvar
           </Button>
@@ -169,6 +214,9 @@ function MatchCard({
     status: string;
     round: number;
     phase: string;
+    matchDate?: string | null;
+    matchTime?: string | null;
+    location?: string | null;
   };
   teams: { id: number; name: string; shortName: string; color: string }[];
   isAdmin: boolean;
@@ -229,26 +277,41 @@ function MatchCard({
           )}
         </div>
       </div>
-      <div className="flex items-center justify-between mt-3">
-        <div className="flex items-center gap-1.5">
-          {finished ? (
-            <span className="flex items-center gap-1 text-xs text-green-400">
-              <CheckCircle2 className="w-3 h-3" /> Encerrado
-            </span>
-          ) : (
-            <span className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Clock className="w-3 h-3" /> Aguardando
-            </span>
+      <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/30">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5">
+            {finished ? (
+              <span className="flex items-center gap-1 text-[10px] text-green-400 font-medium">
+                <CheckCircle2 className="w-3 h-3" /> Encerrado
+              </span>
+            ) : (
+              <span className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium">
+                <Clock className="w-3 h-3" /> Aguardando
+              </span>
+            )}
+          </div>
+          {(match.matchDate || match.matchTime || match.location) && (
+            <>
+              <div className="w-px h-3 bg-border" />
+              <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                {(match.matchDate || match.matchTime) && (
+                  <span>{match.matchDate} {match.matchTime}</span>
+                )}
+                {match.location && (
+                  <span className="truncate max-w-[100px]">{match.location}</span>
+                )}
+              </div>
+            </>
           )}
         </div>
         {isAdmin && onEdit && (
           <Button
             size="sm"
             variant="outline"
-            className="h-7 text-xs border-border/60 hover:border-gold/50 hover:text-gold"
+            className="h-6 text-[10px] px-2 border-border/60 hover:border-gold/50 hover:text-gold"
             onClick={() => onEdit(match)}
           >
-            {finished ? "Editar" : "Registrar"}
+            {finished ? "Editar" : "Alterar / Registrar"}
           </Button>
         )}
       </div>
@@ -520,6 +583,14 @@ export default function TournamentDetail() {
     onError: (e) => toast.error(e.message),
   });
 
+  const updateDetails = trpc.match.updateDetails.useMutation({
+    onSuccess: () => {
+      refetch();
+      refetchBracket();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
   const generateGroups = trpc.tournament.generateGroupMatches.useMutation({
     onSuccess: () => { refetch(); toast.success("Confrontos gerados!"); },
     onError: (e) => toast.error(e.message),
@@ -535,7 +606,102 @@ export default function TournamentDetail() {
     onError: (e) => toast.error(e.message),
   });
 
+  const exportStandingsPDF = () => {
+    if (!standingsMap) return;
+    const doc = new jsPDF();
+    doc.text(`Classificação - ${tournament.name}`, 14, 15);
+    let yPos = 25;
+
+    Object.entries(standingsMap).forEach(([groupName, groupStandings]) => {
+      doc.text(`Grupo ${groupName}`, 14, yPos);
+      autoTable(doc, {
+        startY: yPos + 5,
+        head: [['#', 'Equipe', 'J', 'V', 'E', 'D', 'GP', 'GC', 'SG', 'Pts']],
+        body: groupStandings.map((s, i) => [
+          i + 1, s.teamName, s.played, s.won, s.drawn, s.lost, s.goalsFor, s.goalsAgainst, s.goalDiff, s.points
+        ]),
+        headStyles: { fillColor: [218, 165, 32] },
+      });
+      yPos = (doc as any).lastAutoTable.finalY + 15;
+    });
+
+    doc.save(`classificacao_${tournament.name.toLowerCase().replace(/\s/g, '_')}.pdf`);
+  };
+
+  const exportStandingsExcel = () => {
+    if (!standingsMap) return;
+    const wb = XLSX.utils.book_new();
+    
+    Object.entries(standingsMap).forEach(([groupName, groupStandings]) => {
+      const wsData = [
+        ['#', 'Equipe', 'J', 'V', 'E', 'D', 'GP', 'GC', 'SG', 'Pts'],
+        ...groupStandings.map((s, i) => [
+          i + 1, s.teamName, s.played, s.won, s.drawn, s.lost, s.goalsFor, s.goalsAgainst, s.goalDiff, s.points
+        ])
+      ];
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      XLSX.utils.book_append_sheet(wb, ws, `Grupo ${groupName}`);
+    });
+
+    XLSX.writeFile(wb, `classificacao_${tournament.name.toLowerCase().replace(/\s/g, '_')}.xlsx`);
+  };
+
+  const exportMatchesPDF = () => {
+    const doc = new jsPDF();
+    doc.text(`Tabela de Jogos - ${tournament.name}`, 14, 15);
+    
+    autoTable(doc, {
+      startY: 25,
+      head: [['Fase/Rodada', 'Data', 'Horário', 'Local', 'Mandante', 'Placar', 'Visitante']],
+      body: matches.map((m) => {
+        const home = teams.find(t => t.id === m.homeTeamId);
+        const away = teams.find(t => t.id === m.awayTeamId);
+        const score = m.status === 'finished' ? `${m.homeScore} - ${m.awayScore}` : ' VS ';
+        const phaseLabel = m.phase === 'group' ? `Grupo ${home?.groupName} - Rodada ${m.round}` : m.phase;
+        return [
+          phaseLabel,
+          m.matchDate || '-',
+          m.matchTime || '-',
+          m.location || '-',
+          home?.name || '?',
+          score,
+          away?.name || '?'
+        ];
+      }),
+      headStyles: { fillColor: [218, 165, 32] },
+    });
+
+    doc.save(`jogos_${tournament.name.toLowerCase().replace(/\s/g, '_')}.pdf`);
+  };
+
+  const exportMatchesExcel = () => {
+    const wsData = [
+      ['Fase/Rodada', 'Data', 'Horário', 'Local', 'Mandante', 'Placar', 'Visitante'],
+      ...matches.map((m) => {
+        const home = teams.find(t => t.id === m.homeTeamId);
+        const away = teams.find(t => t.id === m.awayTeamId);
+        const score = m.status === 'finished' ? `${m.homeScore} - ${m.awayScore}` : ' VS ';
+        const phaseLabel = m.phase === 'group' ? `Grupo ${home?.groupName} - Rodada ${m.round}` : m.phase;
+        return [
+          phaseLabel,
+          m.matchDate || '-',
+          m.matchTime || '-',
+          m.location || '-',
+          home?.name || '?',
+          score,
+          away?.name || '?'
+        ];
+      })
+    ];
+    
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    XLSX.utils.book_append_sheet(wb, ws, "Jogos");
+    XLSX.writeFile(wb, `jogos_${tournament.name.toLowerCase().replace(/\s/g, '_')}.xlsx`);
+  };
+
   if (!data) {
+
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 rounded-full border-2 border-gold border-t-transparent animate-spin" />
@@ -568,15 +734,18 @@ export default function TournamentDetail() {
   ];
 
   return (
-    <div className="min-h-screen" style={{ background: "oklch(0.1 0.015 260)" }}>
+    <div className="min-h-screen bg-background">
       {editingMatch && (
         <ScoreModal
           match={editingMatch}
           teams={teams}
           onClose={() => setEditingMatch(null)}
-          onSave={(matchId, home, away, hp, ap) =>
-            updateScore.mutate({ matchId, homeScore: home, awayScore: away, homePenalties: hp, awayPenalties: ap })
-          }
+          onSave={(matchId, home, away, hp, ap, date, time, loc) => {
+            updateScore.mutate({ matchId, homeScore: home, awayScore: away, homePenalties: hp, awayPenalties: ap });
+            if (date || time || loc) {
+              updateDetails.mutate({ matchId, matchDate: date, matchTime: time, location: loc });
+            }
+          }}
         />
       )}
 
@@ -718,13 +887,23 @@ export default function TournamentDetail() {
         {/* Groups Tab */}
         {activeTab === "groups" && (
           <div>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="font-display text-xl font-semibold text-foreground">
-                Tabela de Jogos
-              </h2>
-              <span className="text-sm text-muted-foreground">
-                {groupMatches.filter((m) => m.status === "finished").length}/{groupMatches.length} partidas de grupos
-              </span>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+              <div>
+                <h2 className="font-display text-xl font-semibold text-foreground mb-1">
+                  Tabela de Jogos
+                </h2>
+                <span className="text-sm text-muted-foreground">
+                  {groupMatches.filter((m) => m.status === "finished").length}/{groupMatches.length} partidas de grupos
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 border-border/60" onClick={exportMatchesPDF}>
+                  <Download className="w-3 h-3" /> PDF
+                </Button>
+                <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 border-border/60 text-green-600 hover:text-green-700 hover:border-green-600/30" onClick={exportMatchesExcel}>
+                  <Download className="w-3 h-3" /> Excel
+                </Button>
+              </div>
             </div>
             {groupMatches.length === 0 ? (
               <div className="text-center py-16 border border-dashed border-border/40 rounded-2xl">
@@ -754,9 +933,19 @@ export default function TournamentDetail() {
         {/* Standings Tab */}
         {activeTab === "standings" && (
           <div>
-            <h2 className="font-display text-xl font-semibold text-foreground mb-6">
-              Classificação
-            </h2>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+              <h2 className="font-display text-xl font-semibold text-foreground">
+                Classificação
+              </h2>
+              <div className="flex items-center gap-2">
+                <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 border-border/60" onClick={exportStandingsPDF}>
+                  <Download className="w-3 h-3" /> PDF
+                </Button>
+                <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 border-border/60 text-green-600 hover:text-green-700 hover:border-green-600/30" onClick={exportStandingsExcel}>
+                  <Download className="w-3 h-3" /> Excel
+                </Button>
+              </div>
+            </div>
             {!standingsMap || Object.keys(standingsMap).length === 0 ? (
               <div className="text-center py-16 border border-dashed border-border/40 rounded-2xl">
                 <BarChart3 className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />

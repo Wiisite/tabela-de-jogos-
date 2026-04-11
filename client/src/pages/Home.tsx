@@ -31,7 +31,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen" style={{ background: "oklch(0.1 0.015 260)" }}>
+    <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border/50 sticky top-0 z-50 glass">
         <div className="container flex items-center justify-between h-16">
@@ -75,10 +75,10 @@ export default function Home() {
       {/* Hero */}
       <section className="relative overflow-hidden py-20 sm:py-28">
         <div
-          className="absolute inset-0 opacity-30"
+          className="absolute inset-0 opacity-40"
           style={{
             background:
-              "radial-gradient(ellipse 80% 60% at 50% -10%, oklch(0.82 0.14 85 / 0.25), transparent)",
+              "radial-gradient(ellipse 80% 60% at 50% -10%, oklch(0.65 0.15 85 / 0.15), transparent)",
           }}
         />
         <div className="container relative text-center">

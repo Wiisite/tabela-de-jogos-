@@ -39,7 +39,7 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background" style={{ background: "oklch(0.1 0.015 260)" }}>
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background">
       <button 
         onClick={() => navigate("/")}
         className="absolute top-8 left-8 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"

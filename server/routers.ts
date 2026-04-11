@@ -11,6 +11,7 @@ import {
   getTeamsByTournament,
   getTournamentById,
   updateMatchScore,
+  updateMatchDetails,
   updateTournamentStatus,
 } from "./db";
 import { COOKIE_NAME } from "@shared/const";
@@ -397,6 +398,23 @@ const matchRouter = router({
         const championTeam = teamList.find((t) => t.id === winner);
         await updateTournamentStatus(match.tournamentId, "finished", championTeam?.name);
       }
+      return { ok: true };
+    }),
+
+  updateDetails: protectedProcedure
+    .input(
+      z.object({
+        matchId: z.number(),
+        matchDate: z.string().optional(),
+        matchTime: z.string().optional(),
+        location: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const match = await getMatchById(input.matchId);
+      if (!match) throw new TRPCError({ code: "NOT_FOUND", message: "Partida não encontrada" });
+
+      await updateMatchDetails(input.matchId, input.matchDate, input.matchTime, input.location);
       return { ok: true };
     }),
 });
