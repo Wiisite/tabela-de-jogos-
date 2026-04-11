@@ -63,7 +63,7 @@ export default function Home() {
                 size="sm"
                 variant="outline"
                 className="border-border/60 text-foreground hover:bg-accent"
-                onClick={() => (window.location.href = getLoginUrl())}
+                onClick={() => navigate("/login-admin")}
               >
                 Entrar
               </Button>
@@ -109,7 +109,7 @@ export default function Home() {
               <Button
                 size="lg"
                 className="gradient-gold text-amber-950 font-semibold shadow-gold hover:opacity-90 transition-opacity"
-                onClick={() => (window.location.href = getLoginUrl())}
+                onClick={() => navigate("/login-admin")}
               >
                 Começar agora
                 <ChevronRight className="w-5 h-5 ml-1" />
