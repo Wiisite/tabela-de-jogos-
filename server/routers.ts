@@ -13,6 +13,7 @@ import {
   updateMatchScore,
   updateMatchDetails,
   updateTournamentStatus,
+  deleteTournament,
 } from "./db";
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
@@ -26,6 +27,7 @@ type StandingEntry = {
   teamName: string;
   shortName: string;
   color: string;
+  logo: string | null;
   groupName: string;
   played: number;
   won: number;
@@ -38,7 +40,7 @@ type StandingEntry = {
 };
 
 function computeStandings(
-  teamList: { id: number; name: string; shortName: string; color: string; groupName: string }[],
+  teamList: { id: number; name: string; shortName: string; color: string; groupName: string; logo?: string | null }[],
   groupMatches: {
     homeTeamId: number;
     awayTeamId: number;
@@ -55,6 +57,7 @@ function computeStandings(
       teamName: t.name,
       shortName: t.shortName,
       color: t.color,
+      logo: t.logo ?? null,
       groupName: t.groupName,
       played: 0,
       won: 0,
@@ -158,6 +161,15 @@ const tournamentRouter = router({
     return { tournament, teams: teamList, matches: matchList };
   }),
 
+  delete: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input }) => {
+      const tournament = await getTournamentById(input.id);
+      if (!tournament) throw new TRPCError({ code: "NOT_FOUND", message: "Torneio não encontrado" });
+      await deleteTournament(input.id);
+      return { ok: true };
+    }),
+
   create: protectedProcedure
     .input(
       z.object({
@@ -175,6 +187,7 @@ const tournamentRouter = router({
               shortName: z.string().min(1).max(10),
               color: z.string().default("#1e40af"),
               groupName: z.string().default("A"),
+              logo: z.string().nullable().optional(),
             })
           )
           .min(2),
@@ -191,7 +204,7 @@ const tournamentRouter = router({
 
       // Insert teams with their assigned groups
       for (const t of input.teams) {
-        await createTeam(tournamentId, t.name, t.shortName, t.color, t.groupName);
+        await createTeam(tournamentId, t.name, t.shortName, t.color, t.groupName, t.logo);
       }
       return { id: tournamentId };
     }),

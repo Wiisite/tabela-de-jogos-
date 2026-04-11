@@ -112,6 +112,14 @@ export async function updateTournamentStatus(
     .where(eq(tournaments.id, id));
 }
 
+export async function deleteTournament(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(matches).where(eq(matches.tournamentId, id));
+  await db.delete(teams).where(eq(teams.tournamentId, id));
+  await db.delete(tournaments).where(eq(tournaments.id, id));
+}
+
 // ─── Teams ─────────────────────────────────────────────────────────────────────
 
 export async function getTeamsByTournament(tournamentId: number) {
@@ -125,11 +133,12 @@ export async function createTeam(
   name: string,
   shortName: string,
   color: string,
-  groupName: string = "A"
+  groupName: string = "A",
+  logo?: string | null
 ) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  await db.insert(teams).values({ tournamentId, name, shortName, color, groupName });
+  await db.insert(teams).values({ tournamentId, name, shortName, color, groupName, logo });
 }
 
 // ─── Matches ───────────────────────────────────────────────────────────────────

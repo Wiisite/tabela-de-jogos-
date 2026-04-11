@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
 import { getLoginUrl } from "@/const";
 import { useLocation } from "wouter";
-import { Trophy, ArrowLeft, Plus, Trash2, Shield, Shuffle } from "lucide-react";
-import { useState } from "react";
+import { Trophy, ArrowLeft, Plus, Trash2, Shield, Shuffle, ImagePlus } from "lucide-react";
+import { useState, useRef } from "react";
 import { toast } from "sonner";
 
 const TEAM_COLORS = [
@@ -21,7 +21,7 @@ const DEFAULT_TEAMS = [
   { name: "Colégio Canada", shortName: "CDA", color: "#0e7490" },
 ];
 
-type TeamInput = { name: string; shortName: string; color: string };
+type TeamInput = { name: string; shortName: string; color: string; logo?: string | null; };
 
 export default function CreateTournament() {
   const { isAuthenticated, loading } = useAuth();
@@ -47,7 +47,7 @@ export default function CreateTournament() {
 
   const addTeam = () => {
     const color = TEAM_COLORS[teams.length % TEAM_COLORS.length];
-    setTeams([...teams, { name: "", shortName: "", color, groupName: "A" }]);
+    setTeams([...teams, { name: "", shortName: "", color, groupName: "A", logo: null }]);
   };
 
   const removeTeam = (i: number) => {
@@ -296,14 +296,50 @@ export default function CreateTournament() {
                       value={team.color}
                       onChange={(e) => updateTeam(i, "color", e.target.value)}
                       className="w-8 h-8 rounded-lg border border-border/60 cursor-pointer bg-transparent"
-                      title="Cor da equipe"
+                      title="Cor da equipe (Caso não tenha logo)"
                     />
+                    <label 
+                      className="cursor-pointer bg-transparent border-none p-0 flex items-center justify-center shrink-0 w-8 h-8 rounded-lg outline-dashed outline-1 outline-border/60 hover:outline-gold relative overflow-hidden group"
+                      title="Upload Logo (Foto)"
+                    >
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            if (file.size > 2 * 1024 * 1024) {
+                              return toast.error("A imagem deve ser menor que 2MB");
+                            }
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              updateTeam(i, "logo", reader.result as string);
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                      {team.logo ? (
+                        <div 
+                          className="w-full h-full bg-contain bg-center bg-no-repeat"
+                          style={{ backgroundImage: `url(${team.logo})` }}
+                        />
+                      ) : (
+                        <ImagePlus className="w-4 h-4 text-muted-foreground group-hover:text-gold" />
+                      )}
+                    </label>
                   </div>
                   <div
-                    className="w-9 h-9 rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0"
-                    style={{ background: team.color }}
+                    className="w-9 h-9 rounded-lg flex items-center justify-center text-white text-[10px] font-bold shrink-0 truncate overflow-hidden"
+                    style={{ background: team.logo ? 'transparent' : team.color }}
                   >
-                    {team.shortName.slice(0, 3) || "?"}
+                    {team.logo ? (
+                      <div 
+                        className="w-full h-full bg-cover bg-center bg-no-repeat"
+                        style={{ backgroundImage: `url(${team.logo})` }}
+                      />
+                    ) : (team.shortName.slice(0, 3) || "?")}
                   </div>
                   <input
                     type="text"

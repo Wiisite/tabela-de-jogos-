@@ -53,6 +53,7 @@ export const teams = mysqlTable("teams", {
   name: varchar("name", { length: 255 }).notNull(),
   shortName: varchar("shortName", { length: 10 }).notNull(),
   color: varchar("color", { length: 7 }).notNull().default("#1e40af"),
+  logo: text("logo"),
   groupName: varchar("groupName", { length: 10 }).notNull().default("A"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });

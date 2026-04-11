@@ -10,10 +10,10 @@ import {
   GitBranch,
   Swords,
   Star,
-  CheckCircle2,
   Clock,
   Shield,
   Download,
+  Trash2,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -27,21 +27,30 @@ function TeamBadge({
   color,
   short,
   name,
+  logo,
   size = "md",
 }: {
   color: string;
   short: string;
   name?: string;
+  logo?: string | null;
   size?: "sm" | "md" | "lg";
 }) {
-  const sizes = { sm: "w-7 h-7 text-xs", md: "w-9 h-9 text-sm", lg: "w-12 h-12 text-base" };
+  const sizes = { sm: "w-7 h-7 text-[10px]", md: "w-9 h-9 text-sm", lg: "w-12 h-12 text-base" };
   return (
     <div className="flex items-center gap-2">
       <div
-        className={`${sizes[size]} rounded-lg flex items-center justify-center font-bold text-white shrink-0`}
-        style={{ background: color }}
+        className={`${sizes[size]} rounded-lg flex items-center justify-center font-bold text-white shrink-0 overflow-hidden truncate px-0.5`}
+        style={{ background: logo ? 'transparent' : color }}
       >
-        {short.slice(0, 3)}
+        {logo ? (
+          <div 
+            className="w-full h-full bg-contain bg-center bg-no-repeat"
+            style={{ backgroundImage: `url(${logo})` }}
+          />
+        ) : (
+          short.slice(0, 3)
+        )}
       </div>
       {name && <span className="text-sm font-medium text-foreground truncate">{name}</span>}
     </div>
@@ -69,7 +78,7 @@ function ScoreModal({
   onSave,
 }: {
   match: MatchForModal;
-  teams: { id: number; name: string; shortName: string; color: string }[];
+  teams: { id: number; name: string; shortName: string; color: string; logo?: string | null }[];
   onClose: () => void;
   onSave: (matchId: number, home: number, away: number, hp?: number, ap?: number, date?: string, time?: string, loc?: string) => void;
 }) {
@@ -95,7 +104,7 @@ function ScoreModal({
         <div className="flex items-center gap-4 justify-center mb-6">
           <div className="flex-1 text-center">
             {homeTeam && (
-              <TeamBadge color={homeTeam.color} short={homeTeam.shortName} size="lg" />
+              <TeamBadge color={homeTeam.color} short={homeTeam.shortName} logo={homeTeam.logo} size="lg" />
             )}
             <p className="text-xs text-muted-foreground mt-2 truncate">{homeTeam?.name}</p>
           </div>
@@ -118,7 +127,7 @@ function ScoreModal({
           </div>
           <div className="flex-1 text-center">
             {awayTeam && (
-              <TeamBadge color={awayTeam.color} short={awayTeam.shortName} size="lg" />
+              <TeamBadge color={awayTeam.color} short={awayTeam.shortName} logo={awayTeam.logo} size="lg" />
             )}
             <p className="text-xs text-muted-foreground mt-2 truncate">{awayTeam?.name}</p>
           </div>
@@ -218,7 +227,7 @@ function MatchCard({
     matchTime?: string | null;
     location?: string | null;
   };
-  teams: { id: number; name: string; shortName: string; color: string }[];
+  teams: { id: number; name: string; shortName: string; color: string; logo?: string | null }[];
   isAdmin: boolean;
   onEdit?: (m: MatchForModal) => void;
 }) {
@@ -240,7 +249,7 @@ function MatchCard({
               <span className="text-sm font-medium text-foreground text-right truncate max-w-[120px]">
                 {homeTeam.name}
               </span>
-              <TeamBadge color={homeTeam.color} short={homeTeam.shortName} size="sm" />
+              <TeamBadge color={homeTeam.color} short={homeTeam.shortName} logo={homeTeam.logo} size="sm" />
             </>
           )}
         </div>
@@ -269,7 +278,7 @@ function MatchCard({
         <div className="flex-1 flex items-center gap-2">
           {awayTeam && (
             <>
-              <TeamBadge color={awayTeam.color} short={awayTeam.shortName} size="sm" />
+              <TeamBadge color={awayTeam.color} short={awayTeam.shortName} logo={awayTeam.logo} size="sm" />
               <span className="text-sm font-medium text-foreground truncate max-w-[120px]">
                 {awayTeam.name}
               </span>
@@ -376,7 +385,7 @@ function StandingsTable({
                   </span>
                 </td>
                 <td className="py-3 px-4">
-                  <TeamBadge color={s.color} short={s.shortName} name={s.teamName} size="sm" />
+                  <TeamBadge color={s.color} short={s.shortName} logo={s.logo} name={s.teamName} size="sm" />
                 </td>
                 <td className="py-3 px-3 text-center text-foreground">{s.played}</td>
                 <td className="py-3 px-3 text-center text-green-400 font-medium">{s.won}</td>
@@ -460,7 +469,7 @@ function BracketView({
           >
             <div className="flex items-center gap-2">
               {team ? (
-                <TeamBadge color={team.color} short={team.shortName} size="sm" />
+                <TeamBadge color={team.color} short={team.shortName} logo={team.logo} size="sm" />
               ) : (
                 <div className="w-7 h-7 rounded-lg bg-secondary/50 flex items-center justify-center">
                   <span className="text-xs text-muted-foreground">?</span>
@@ -603,6 +612,14 @@ export default function TournamentDetail() {
 
   const generateFinal = trpc.tournament.generateFinal.useMutation({
     onSuccess: () => { refetch(); refetchBracket(); setActiveTab("final"); toast.success("Final e 3º Lugar gerados!"); },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const deleteTournament = trpc.tournament.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Torneio excluído com sucesso.");
+      navigate("/");
+    },
     onError: (e) => toast.error(e.message),
   });
 
@@ -768,15 +785,31 @@ export default function TournamentDetail() {
               {status.label}
             </span>
             {isAuthenticated && (
-              <Button
-                size="sm"
-                variant="outline"
-                className="border-border/60 hover:border-gold/50 hover:text-gold text-xs"
-                onClick={() => navigate("/admin")}
-              >
-                <Shield className="w-3.5 h-3.5 mr-1" />
-                Admin
-              </Button>
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-border/60 hover:border-gold/50 hover:text-gold text-xs"
+                  onClick={() => navigate("/admin")}
+                >
+                  <Shield className="w-3.5 h-3.5 mr-1" />
+                  Admin
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  className="text-xs"
+                  onClick={() => {
+                    if (window.confirm("Atenção: Você está prestes a excluir este torneio permanentemente. Isso apagará todas as equipes e partidas. Tem certeza?")) {
+                      deleteTournament.mutate({ id: tournamentId });
+                    }
+                  }}
+                  disabled={deleteTournament.isPending}
+                >
+                  <Trash2 className="w-3.5 h-3.5 sm:mr-1" />
+                  <span className="hidden sm:inline">Excluir</span>
+                </Button>
+              </>
             )}
           </div>
         </div>
@@ -915,15 +948,24 @@ export default function TournamentDetail() {
                 </p>
               </div>
             ) : (
-              <div className="grid gap-3 sm:grid-cols-2">
-                {groupMatches.map((m) => (
-                  <MatchCard
-                    key={m.id}
-                    match={m}
-                    teams={teams}
-                    isAdmin={isAuthenticated}
-                    onEdit={setEditingMatch}
-                  />
+              <div className="space-y-8">
+                {Array.from(new Set(groupMatches.map(m => m.round))).sort((a,b) => a - b).map(round => (
+                  <div key={round}>
+                    <h3 className="font-display font-semibold text-lg text-gold mb-4 border-b border-border/40 pb-2">
+                       Rodada {round}
+                    </h3>
+                    <div className="grid gap-3 sm:grid-cols-2 mb-8">
+                      {groupMatches.filter(m => m.round === round).map((m) => (
+                        <MatchCard
+                          key={m.id}
+                          match={m}
+                          teams={teams}
+                          isAdmin={isAuthenticated}
+                          onEdit={setEditingMatch}
+                        />
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
