@@ -6,6 +6,11 @@ RUN corepack enable
 
 # --- Build Stage ---
 FROM base AS build
+ARG VITE_OAUTH_PORTAL_URL
+ARG VITE_APP_ID
+ENV VITE_OAUTH_PORTAL_URL=$VITE_OAUTH_PORTAL_URL
+ENV VITE_APP_ID=$VITE_APP_ID
+
 COPY . /usr/src/app
 WORKDIR /usr/src/app
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
