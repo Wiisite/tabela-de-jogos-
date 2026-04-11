@@ -7,9 +7,6 @@ README_LOCAL.md
 docker-compose.yml
 .prettierrc
 .prettierignore
-tsconfig.json
-vite.config.ts
-vitest.config.ts
 todo.md
 *.log
 npm-debug.log*
