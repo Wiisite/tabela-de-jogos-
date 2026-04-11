@@ -96,7 +96,7 @@ export async function createTournament(
     lossPoints: config.lossPoints ?? 0,
     isDoubleRound: config.isDoubleRound ? 1 : 0,
   });
-  return result[0];
+  return result[0].insertId;
 }
 
 export async function updateTournamentStatus(
