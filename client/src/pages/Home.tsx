@@ -229,6 +229,13 @@ export default function Home() {
             <span className="font-display font-semibold text-foreground">TournamentPro</span>
           </div>
           <p>Sistema profissional de gerenciamento de torneios esportivos</p>
+          <button 
+            onClick={() => navigate("/login-admin")}
+            className="mt-6 text-xs text-muted-foreground/40 hover:text-gold transition-colors flex items-center gap-1.5 mx-auto"
+          >
+            <Shield className="w-3 h-3" />
+            Acesso Administrativo
+          </button>
         </div>
       </footer>
     </div>

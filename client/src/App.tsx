@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import TournamentDetail from "./pages/TournamentDetail";
 import AdminDashboard from "./pages/AdminDashboard";
 import CreateTournament from "./pages/CreateTournament";
+import AdminLogin from "./pages/AdminLogin";
 
 function Router() {
   return (
@@ -16,6 +17,7 @@ function Router() {
       <Route path="/tournament/:id" component={TournamentDetail} />
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/create" component={CreateTournament} />
+      <Route path="/login-admin" component={AdminLogin} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
