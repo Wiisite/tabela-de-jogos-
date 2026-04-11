@@ -32,43 +32,16 @@ export default function AdminDashboard() {
     enabled: isAuthenticated,
   });
 
-  if (loading) {
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      navigate("/login-admin");
+    }
+  }, [loading, isAuthenticated, navigate]);
+
+  if (loading || !isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 rounded-full border-2 border-gold border-t-transparent animate-spin" />
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="w-full max-w-sm text-center">
-          <div className="w-16 h-16 rounded-2xl gradient-gold flex items-center justify-center mx-auto mb-6 shadow-gold">
-            <Shield className="w-8 h-8 text-amber-950" />
-          </div>
-          <h1 className="font-display text-2xl font-bold text-foreground mb-2">
-            Acesso Restrito
-          </h1>
-          <p className="text-muted-foreground text-sm mb-8 leading-relaxed">
-            O painel administrativo requer autenticação. Faça login para gerenciar torneios,
-            registrar placares e controlar as fases.
-          </p>
-          <Button
-            className="w-full gradient-gold text-amber-950 font-semibold hover:opacity-90 shadow-gold"
-            onClick={() => (window.location.href = getLoginUrl())}
-          >
-            Entrar com Manus
-          </Button>
-          <Button
-            variant="ghost"
-            className="w-full mt-3 text-muted-foreground hover:text-foreground"
-            onClick={() => navigate("/")}
-          >
-            <ArrowLeft className="w-4 h-4 mr-1.5" />
-            Voltar ao início
-          </Button>
-        </div>
       </div>
     );
   }
