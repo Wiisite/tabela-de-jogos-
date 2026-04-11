@@ -5,8 +5,8 @@ export const getLoginUrl = () => {
   const oauthPortalUrl = import.meta.env.VITE_OAUTH_PORTAL_URL;
   const appId = import.meta.env.VITE_APP_ID;
 
-  if (!oauthPortalUrl || !appId) {
-    console.warn("[Auth] OAuth variables (VITE_OAUTH_PORTAL_URL or VITE_APP_ID) are missing. Login will not work.");
+  if (!oauthPortalUrl || !appId || oauthPortalUrl.startsWith("%")) {
+    console.warn("[Auth] OAuth variables are missing or not substituted. Login will not work.");
     return "#";
   }
 
