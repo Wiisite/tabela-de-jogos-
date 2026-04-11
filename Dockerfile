@@ -13,12 +13,16 @@ RUN pnpm build
 
 # --- Production Stage ---
 FROM base
+WORKDIR /usr/src/app
 COPY --from=build /usr/src/app/dist /usr/src/app/dist
 COPY --from=build /usr/src/app/package.json /usr/src/app/package.json
 COPY --from=build /usr/src/app/node_modules /usr/src/app/node_modules
+COPY --from=build /usr/src/app/drizzle /usr/src/app/drizzle
+COPY --from=build /usr/src/app/drizzle.config.ts /usr/src/app/drizzle.config.ts
 
 WORKDIR /usr/src/app
 EXPOSE 3000
 
 ENV NODE_ENV=production
-CMD [ "pnpm", "start" ]
+# Run db:push before starting the server to ensure DB is up to date
+CMD pnpm db:push ; pnpm start
