@@ -72,7 +72,10 @@ export default function CreateTournament() {
       toast.success("Torneio criado com sucesso!");
       navigate(`/${portalSlug}/tournament/${t.id}`);
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e) => {
+      const msg = e.message || "Erro ao criar torneio";
+      toast.error(msg.length > 200 ? msg.substring(0, 200) + "..." : msg);
+    },
   });
 
   const addTeam = () => {

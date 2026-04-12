@@ -25,7 +25,8 @@ export default function CreatePortal() {
       navigate("/admin");
     },
     onError: (error) => {
-      toast.error(error.message || "Erro ao criar liga");
+      const msg = error.message || "Erro ao criar liga";
+      toast.error(msg.length > 200 ? msg.substring(0, 200) + "..." : msg);
     },
   });
 

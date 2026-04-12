@@ -3,6 +3,7 @@ import {
   mysqlEnum,
   mysqlTable,
   text,
+  longtext,
   timestamp,
   varchar,
 } from "drizzle-orm/mysql-core";
@@ -30,7 +31,7 @@ export const portals = mysqlTable("portals", {
   id: int("id").autoincrement().primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   slug: varchar("slug", { length: 100 }).notNull().unique(),
-  logo: text("logo"),
+  logo: longtext("logo"),
   primaryColor: varchar("primaryColor", { length: 7 }).default("#1e3a8a").notNull(),
   secondaryColor: varchar("secondaryColor", { length: 7 }).default("#f59e0b").notNull(),
   adminPassword: varchar("adminPassword", { length: 255 }),
@@ -75,7 +76,7 @@ export const teams = mysqlTable("teams", {
   name: varchar("name", { length: 255 }).notNull(),
   shortName: varchar("shortName", { length: 10 }).notNull(),
   color: varchar("color", { length: 7 }).notNull().default("#1e40af"),
-  logo: text("logo"),
+  logo: longtext("logo"),
   groupName: varchar("groupName", { length: 10 }).notNull().default("A"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
