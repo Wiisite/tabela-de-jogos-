@@ -11,6 +11,7 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./cookies";
 import { ENV } from "./env";
 import { sdk } from "./sdk";
+import * as db from "../db";
 
 
 function isPortAvailable(port: number): Promise<boolean> {
@@ -113,9 +114,23 @@ async function startServer() {
   }
 
   // Bind to 0.0.0.0 to allow external reachability in containers/IaaS
-  server.listen(port, "0.0.0.0", () => {
-    console.log(`Server running on http://0.0.0.0:${port}/`);
+  server.listen(port, "0.0.0.0", async () => {
+    console.log(`Server running on http://0.0.0.0:${port}/ (detected from PORT env: ${process.env.PORT || 'not set'})`);
     console.log(`Local Access: http://localhost:${port}/`);
+    
+    // Quick DB table check to confirm creation
+    try {
+      const database = await db.getDb();
+      if (database) {
+        console.log("[System] Connecting to database for health check...");
+        const portals = await db.getAllPortals();
+        console.log(`[System] Database OK. Found ${portals.length} portals in schema.`);
+      } else {
+        console.error("[System] Database connection failed: _db is null");
+      }
+    } catch (e) {
+      console.error("[System] Database initialization check failed:", e);
+    }
   });
 }
 

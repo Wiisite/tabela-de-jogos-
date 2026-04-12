@@ -9,10 +9,13 @@ export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
       _db = drizzle(process.env.DATABASE_URL);
+      console.log("[Database] Initialized successfully.");
     } catch (error) {
-      console.warn("[Database] Failed to connect:", error);
+      console.error("[Database] Failed to connect:", error);
       _db = null;
     }
+  } else if (!_db) {
+    console.warn("[Database] DATABASE_URL is missing!");
   }
   return _db;
 }

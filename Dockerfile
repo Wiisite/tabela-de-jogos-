@@ -29,5 +29,5 @@ WORKDIR /usr/src/app
 EXPOSE 3000
 
 ENV NODE_ENV=production
-# Run db:push before starting the server to ensure DB is up to date
-CMD ["sh", "-c", "pnpm db:push && pnpm start"]
+# Run db:deploy before starting the server to ensure DB is up to date
+CMD ["sh", "-c", "pnpm db:deploy && pnpm start"]
