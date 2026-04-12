@@ -124,8 +124,8 @@ async function startServer() {
     
     // Auto-seed requested admin user
     try {
-      const email = "apefaa1998@gmail.com";
-      const password = "admin_apef_2026"; // Senha temporária
+      const email = "apefia1998@gmail.com";
+      const password = "@coi2046WII#"; 
       const database = await db.getDb();
       if (database) {
         const { users: usersTable } = await import("../drizzle/schema");

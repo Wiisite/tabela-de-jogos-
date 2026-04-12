@@ -11,8 +11,8 @@ async function main() {
   }
 
   const db = drizzle(url);
-  const email = "apefaa1998@gmail.com";
-  const password = "admin_apef_2026"; // Senha temporária sugerida
+  const email = "apefia1998@gmail.com";
+  const password = "@coi2046WII#"; 
   
   console.log(`Creating super admin: ${email}...`);
   
