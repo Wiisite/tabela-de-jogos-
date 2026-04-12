@@ -211,6 +211,21 @@ export async function updateMatchDetails(
     .where(eq(matches.id, matchId));
 }
 
+export async function resetMatchScore(matchId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db
+    .update(matches)
+    .set({
+      homeScore: null,
+      awayScore: null,
+      homePenalties: null,
+      awayPenalties: null,
+      status: "scheduled",
+    })
+    .where(eq(matches.id, matchId));
+}
+
 export async function getMatchById(matchId: number) {
   const db = await getDb();
   if (!db) return undefined;

@@ -14,6 +14,7 @@ import {
   updateMatchDetails,
   updateTournamentStatus,
   deleteTournament,
+  resetMatchScore,
 } from "./db";
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
@@ -481,6 +482,22 @@ const matchRouter = router({
       if (!match) throw new TRPCError({ code: "NOT_FOUND", message: "Partida não encontrada" });
 
       await updateMatchDetails(input.matchId, input.matchDate, input.matchTime, input.location);
+      return { ok: true };
+    }),
+
+  resetScore: protectedProcedure
+    .input(z.object({ matchId: z.number() }))
+    .mutation(async ({ input }) => {
+      const match = await getMatchById(input.matchId);
+      if (!match) throw new TRPCError({ code: "NOT_FOUND", message: "Partida não encontrada" });
+
+      await resetMatchScore(input.matchId);
+
+      // Se era a final, desfaz o campeão e volta o status do torneio para "final"
+      if (match.phase === "final") {
+        await updateTournamentStatus(match.tournamentId, "final");
+      }
+
       return { ok: true };
     }),
 });

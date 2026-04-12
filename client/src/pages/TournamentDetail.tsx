@@ -15,6 +15,7 @@ import {
   Download,
   Trash2,
   CheckCircle2,
+  X,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -72,16 +73,25 @@ type MatchForModal = {
   location?: string | null;
 };
 
+const PHASE_LABEL_MAP: Record<string, string> = {
+  group: "Fase de Grupos",
+  semifinal: "Semifinal",
+  final: "Grande Final",
+  third_place: "Disputa de 3º Lugar",
+};
+
 function ScoreModal({
   match,
   teams,
   onClose,
   onSave,
+  onReset,
 }: {
   match: MatchForModal;
   teams: { id: number; name: string; shortName: string; color: string; logo?: string | null }[];
   onClose: () => void;
   onSave: (matchId: number, home: number, away: number, hp?: number, ap?: number, date?: string, time?: string, loc?: string) => void;
+  onReset?: (matchId: number) => void;
 }) {
   const homeTeam = teams.find((t) => t.id === match.homeTeamId);
   const awayTeam = teams.find((t) => t.id === match.awayTeamId);
@@ -89,118 +99,161 @@ function ScoreModal({
   const [away, setAway] = useState(match.awayScore ?? 0);
   const [hp, setHp] = useState(match.homePenalties ?? 0);
   const [ap, setAp] = useState(match.awayPenalties ?? 0);
-  
   const [date, setDate] = useState(match.matchDate ?? "");
   const [time, setTime] = useState(match.matchTime ?? "");
   const [loc, setLoc] = useState(match.location ?? "");
 
   const isKnockout = match.phase !== "group";
   const isDraw = home === away;
+  const hasResult = match.homeScore !== null;
+  const phaseLabel = PHASE_LABEL_MAP[match.phase ?? "group"] ?? "Partida";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-card border border-border rounded-2xl p-6 w-full max-w-sm shadow-premium">
-        <h3 className="font-display font-semibold text-lg text-center mb-6">Registrar Placar</h3>
-        <div className="flex items-center gap-4 justify-center mb-6">
-          <div className="flex-1 text-center">
-            {homeTeam && (
-              <TeamBadge color={homeTeam.color} short={homeTeam.shortName} logo={homeTeam.logo} size="lg" />
-            )}
-            <p className="text-xs text-muted-foreground mt-2 truncate">{homeTeam?.name}</p>
-          </div>
+      <div className="relative bg-card border border-border rounded-2xl w-full max-w-sm shadow-premium overflow-hidden">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border/50 bg-secondary/30">
           <div className="flex items-center gap-3">
-            <input
-              type="number"
-              min={0}
-              value={home}
-              onChange={(e) => setHome(Math.max(0, parseInt(e.target.value) || 0))}
-              className="w-14 h-14 text-center text-2xl font-bold bg-input border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-            <span className="text-muted-foreground font-bold">×</span>
-            <input
-              type="number"
-              min={0}
-              value={away}
-              onChange={(e) => setAway(Math.max(0, parseInt(e.target.value) || 0))}
-              className="w-14 h-14 text-center text-2xl font-bold bg-input border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-          <div className="flex-1 text-center">
-            {awayTeam && (
-              <TeamBadge color={awayTeam.color} short={awayTeam.shortName} logo={awayTeam.logo} size="lg" />
-            )}
-            <p className="text-xs text-muted-foreground mt-2 truncate">{awayTeam?.name}</p>
-          </div>
-        </div>
-
-        {isKnockout && isDraw && (
-          <div className="mb-6 p-4 bg-amber-900/10 border border-gold/20 rounded-xl">
-            <p className="text-xs text-center text-gold font-semibold uppercase tracking-wider mb-3">Pênaltis</p>
-            <div className="flex items-center gap-4 justify-center">
-              <input
-                type="number"
-                min={0}
-                value={hp}
-                onChange={(e) => setHp(Math.max(0, parseInt(e.target.value) || 0))}
-                className="w-12 h-10 text-center text-lg font-bold bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-gold"
-              />
-              <span className="text-muted-foreground text-xs font-bold">( )</span>
-              <input
-                type="number"
-                min={0}
-                value={ap}
-                onChange={(e) => setAp(Math.max(0, parseInt(e.target.value) || 0))}
-                className="w-12 h-10 text-center text-lg font-bold bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-gold"
-              />
-            </div>
-          </div>
-        )}
-
-        <div className="space-y-3 mb-6 p-4 border border-border/40 rounded-xl bg-background/50">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Detalhes da Partida</p>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-[10px] text-muted-foreground font-medium mb-1 block">Data</label>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full h-8 px-2 text-xs bg-input border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
-              />
+            <div className="w-8 h-8 rounded-lg gradient-gold flex items-center justify-center shadow-gold shrink-0">
+              <Swords className="w-4 h-4 text-amber-950" />
             </div>
             <div>
-              <label className="text-[10px] text-muted-foreground font-medium mb-1 block">Horário</label>
-              <input
-                type="time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                className="w-full h-8 px-2 text-xs bg-input border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
-              />
+              <p className="font-display font-semibold text-sm text-foreground leading-tight">
+                {hasResult ? "Editar Resultado" : "Registrar Placar"}
+              </p>
+              <p className="text-[10px] text-muted-foreground">{phaseLabel}</p>
             </div>
           </div>
-          <div>
-            <label className="text-[10px] text-muted-foreground font-medium mb-1 block">Local</label>
-            <input
-              type="text"
-              placeholder="Ex: Ginásio Principal"
-              value={loc}
-              onChange={(e) => setLoc(e.target.value)}
-              className="w-full h-8 px-3 text-xs bg-input border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
-            />
-          </div>
-        </div>
-
-        <div className="flex gap-3">
-          <Button variant="outline" className="flex-1" onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button
-            className="flex-1 gradient-gold text-amber-950 font-semibold hover:opacity-90 shadow-gold"
-            onClick={() => onSave(match.id, home, away, isKnockout && isDraw ? hp : undefined, isKnockout && isDraw ? ap : undefined, date, time, loc)}
+          <button
+            onClick={onClose}
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
           >
-            Salvar
-          </Button>
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="p-5">
+          {/* Scoreboard */}
+          <div className="flex items-center gap-3 justify-center mb-5">
+            <div className="flex-1 flex flex-col items-center gap-2">
+              {homeTeam && (
+                <TeamBadge color={homeTeam.color} short={homeTeam.shortName} logo={homeTeam.logo} size="lg" />
+              )}
+              <p className="text-xs text-muted-foreground text-center leading-tight max-w-[90px] truncate">{homeTeam?.name}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min={0}
+                value={home}
+                onChange={(e) => setHome(Math.max(0, parseInt(e.target.value) || 0))}
+                className="w-14 h-14 text-center text-2xl font-bold bg-input border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-gold"
+              />
+              <span className="text-muted-foreground font-bold text-lg">×</span>
+              <input
+                type="number"
+                min={0}
+                value={away}
+                onChange={(e) => setAway(Math.max(0, parseInt(e.target.value) || 0))}
+                className="w-14 h-14 text-center text-2xl font-bold bg-input border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-gold"
+              />
+            </div>
+            <div className="flex-1 flex flex-col items-center gap-2">
+              {awayTeam && (
+                <TeamBadge color={awayTeam.color} short={awayTeam.shortName} logo={awayTeam.logo} size="lg" />
+              )}
+              <p className="text-xs text-muted-foreground text-center leading-tight max-w-[90px] truncate">{awayTeam?.name}</p>
+            </div>
+          </div>
+
+          {/* Penalties (knockout + draw) */}
+          {isKnockout && isDraw && (
+            <div className="mb-4 p-3 bg-amber-900/10 border border-gold/20 rounded-xl">
+              <p className="text-[10px] text-center text-gold font-semibold uppercase tracking-wider mb-2">Pênaltis</p>
+              <div className="flex items-center gap-3 justify-center">
+                <input
+                  type="number"
+                  min={0}
+                  value={hp}
+                  onChange={(e) => setHp(Math.max(0, parseInt(e.target.value) || 0))}
+                  className="w-12 h-10 text-center text-lg font-bold bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-gold"
+                />
+                <span className="text-muted-foreground text-xs font-bold">( pen )</span>
+                <input
+                  type="number"
+                  min={0}
+                  value={ap}
+                  onChange={(e) => setAp(Math.max(0, parseInt(e.target.value) || 0))}
+                  className="w-12 h-10 text-center text-lg font-bold bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-gold"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Match details */}
+          <div className="space-y-2 mb-5 p-3 border border-border/40 rounded-xl bg-background/50">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Detalhes da Partida</p>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-[10px] text-muted-foreground font-medium mb-1 block">Data</label>
+                <input
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="w-full h-8 px-2 text-xs bg-input border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-muted-foreground font-medium mb-1 block">Horário</label>
+                <input
+                  type="time"
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)}
+                  className="w-full h-8 px-2 text-xs bg-input border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-[10px] text-muted-foreground font-medium mb-1 block">Local</label>
+              <input
+                type="text"
+                placeholder="Ex: Ginásio Principal"
+                value={loc}
+                onChange={(e) => setLoc(e.target.value)}
+                className="w-full h-8 px-3 text-xs bg-input border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+          </div>
+
+          {/* Delete result button — only when match already has a score */}
+          {hasResult && onReset && (
+            <button
+              onClick={() => {
+                if (window.confirm("Excluir o resultado? A partida voltará para 'Aguardando'.")) {
+                  onReset(match.id);
+                }
+              }}
+              className="w-full flex items-center justify-center gap-2 h-8 mb-3 rounded-lg border border-red-500/30 text-red-400 text-xs font-medium hover:bg-red-500/10 hover:border-red-500/50 transition-colors"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Excluir Resultado
+            </button>
+          )}
+
+          {/* Actions */}
+          <div className="flex gap-2">
+            <Button variant="outline" className="flex-1 h-10" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button
+              className="flex-1 h-10 gradient-gold text-amber-950 font-semibold hover:opacity-90 shadow-gold"
+              onClick={() => onSave(match.id, home, away, isKnockout && isDraw ? hp : undefined, isKnockout && isDraw ? ap : undefined, date, time, loc)}
+            >
+              Salvar
+            </Button>
+          </div>
         </div>
       </div>
     </div>
@@ -602,6 +655,17 @@ export default function TournamentDetail() {
     onError: (e) => toast.error(e.message),
   });
 
+  const resetScore = trpc.match.resetScore.useMutation({
+    onSuccess: () => {
+      refetch();
+      refetchBracket();
+      utils.tournament.getStandings.invalidate({ tournamentId });
+      setEditingMatch(null);
+      toast.success("Resultado excluído. Partida voltou para Aguardando.");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
   const generateGroups = trpc.tournament.generateGroupMatches.useMutation({
     onSuccess: () => { refetch(); toast.success("Confrontos gerados!"); },
     onError: (e) => toast.error(e.message),
@@ -767,6 +831,7 @@ export default function TournamentDetail() {
               updateDetails.mutate({ matchId, matchDate: date, matchTime: time, location: loc });
             }
           }}
+          onReset={(matchId) => resetScore.mutate({ matchId })}
         />
       )}
 
