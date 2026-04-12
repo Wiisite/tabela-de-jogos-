@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, matches, teams, tournaments, users } from "../drizzle/schema";
+import { InsertUser, matches, teams, tournaments, users, portals } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -58,11 +58,56 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// ─── Tournaments ───────────────────────────────────────────────────────────────
+// ─── Portals ───────────────────────────────────────────────────────────────────
 
-export async function getAllTournaments() {
+export async function getAllPortals() {
   const db = await getDb();
   if (!db) return [];
+  return db.select().from(portals).orderBy(portals.name);
+}
+
+export async function getPortalBySlug(slug: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(portals).where(eq(portals.slug, slug)).limit(1);
+  return result[0];
+}
+
+export async function createPortal(data: {
+  name: string;
+  slug: string;
+  logo?: string | null;
+  primaryColor?: string;
+  secondaryColor?: string;
+  adminPassword?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const result = await db.insert(portals).values({
+    name: data.name,
+    slug: data.slug,
+    logo: data.logo ?? null,
+    primaryColor: data.primaryColor ?? "#1e3a8a",
+    secondaryColor: data.secondaryColor ?? "#f59e0b",
+    adminPassword: data.adminPassword ?? null,
+  });
+  return result[0].insertId;
+}
+
+export async function deletePortal(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(portals).where(eq(portals.id, id));
+}
+
+// ─── Tournaments ───────────────────────────────────────────────────────────────
+
+export async function getAllTournaments(portalId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  if (portalId) {
+    return db.select().from(tournaments).where(eq(tournaments.portalId, portalId)).orderBy(tournaments.createdAt);
+  }
   return db.select().from(tournaments).orderBy(tournaments.createdAt);
 }
 
@@ -74,6 +119,7 @@ export async function getTournamentById(id: number) {
 }
 
 export async function createTournament(
+  portalId: number,
   name: string,
   category: string,
   config: {
@@ -82,12 +128,13 @@ export async function createTournament(
     drawPoints?: number;
     lossPoints?: number;
     isDoubleRound?: boolean;
-    sport?: "football" | "basketball" | "volleyball" | "handball";
+    sport?: "football" | "basketball" | "volleyball" | "handball" | "futsal";
   } = {}
 ) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
   const result = await db.insert(tournaments).values({
+    portalId,
     name,
     category,
     status: "pending",
@@ -121,6 +168,7 @@ export async function deleteTournament(id: number) {
   await db.delete(teams).where(eq(teams.tournamentId, id));
   await db.delete(tournaments).where(eq(tournaments.id, id));
 }
+
 
 // ─── Teams ─────────────────────────────────────────────────────────────────────
 

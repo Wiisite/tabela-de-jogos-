@@ -1,5 +1,3 @@
-import { TRPCError } from "@trpc/server";
-import { z } from "zod";
 import {
   createMatch,
   createTeam,
@@ -15,6 +13,10 @@ import {
   updateTournamentStatus,
   deleteTournament,
   resetMatchScore,
+  getAllPortals,
+  getPortalBySlug,
+  createPortal,
+  deletePortal,
 } from "./db";
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
@@ -179,11 +181,45 @@ const DEFAULT_TEAMS = [
   { name: "Colégio Canada", shortName: "CDA", color: "#0e7490" },
 ];
 
+// ─── Portal Router ─────────────────────────────────────────────────────────────
+
+const portalRouter = router({
+  list: publicProcedure.query(async () => {
+    return getAllPortals();
+  }),
+  getBySlug: publicProcedure.input(z.object({ slug: z.string() })).query(async ({ input }) => {
+    const portal = await getPortalBySlug(input.slug);
+    if (!portal) throw new TRPCError({ code: "NOT_FOUND", message: "Portal não encontrado" });
+    return portal;
+  }),
+  create: protectedProcedure
+    .input(
+      z.object({
+        name: z.string().min(1),
+        slug: z.string().min(1),
+        logo: z.string().nullable().optional(),
+        primaryColor: z.string().optional(),
+        secondaryColor: z.string().optional(),
+        adminPassword: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const existing = await getPortalBySlug(input.slug);
+      if (existing) throw new TRPCError({ code: "BAD_REQUEST", message: "Este slug já está em uso" });
+      const id = await createPortal(input);
+      return { id };
+    }),
+  delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
+    await deletePortal(input.id);
+    return { ok: true };
+  }),
+});
+
 // ─── Tournament Router ─────────────────────────────────────────────────────────
 
 const tournamentRouter = router({
-  list: publicProcedure.query(async () => {
-    return getAllTournaments();
+  list: publicProcedure.input(z.object({ portalId: z.number().optional() }).optional()).query(async ({ input }) => {
+    return getAllTournaments(input?.portalId);
   }),
 
   getGlobalStats: publicProcedure.query(async () => {
@@ -211,9 +247,10 @@ const tournamentRouter = router({
   create: protectedProcedure
     .input(
       z.object({
+        portalId: z.number().default(1),
         name: z.string().min(1),
         category: z.string().min(1),
-        sport: z.enum(["football", "basketball", "volleyball", "handball"]).default("football"),
+        sport: z.enum(["football", "basketball", "volleyball", "handball", "futsal"]).default("football"),
         groupCount: z.number().min(1).max(4).default(1),
         winPoints: z.number().default(3),
         drawPoints: z.number().default(1),
@@ -232,8 +269,11 @@ const tournamentRouter = router({
           .min(2),
       })
     )
-    .mutation(async ({ input }) => {
-      const tournamentId = await createTournament(input.name, input.category, {
+    .mutation(async ({ input, ctx }) => {
+      // If portal admin, override portalId with their assigned portal
+      const portalId = (ctx.user?.role === 'admin' && ctx.user.portalId) ? ctx.user.portalId : input.portalId;
+
+      const tournamentId = await createTournament(portalId, input.name, input.category, {
         sport: input.sport,
         groupCount: input.groupCount,
         winPoints: input.winPoints,
@@ -508,7 +548,7 @@ const matchRouter = router({
 
 const seedRouter = router({
   seedExample: protectedProcedure.mutation(async () => {
-    const tournamentId = await createTournament("Sub-9 MASC", "Sub-9 Masculino", { groupCount: 1 });
+    const tournamentId = await createTournament(1, "Sub-9 MASC", "Sub-9 Masculino", { groupCount: 1 });
     for (const team of DEFAULT_TEAMS) {
       await createTeam(tournamentId, team.name, team.shortName, team.color, "A");
     }
@@ -518,7 +558,7 @@ const seedRouter = router({
   checkAndSeed: publicProcedure.mutation(async () => {
     const all = await getAllTournaments();
     if (all.length === 0) {
-      const tournamentId = await createTournament("Sub-9 MASC", "Sub-9 Masculino", { groupCount: 1 });
+      const tournamentId = await createTournament(1, "Sub-9 MASC", "Sub-9 Masculino", { groupCount: 1 });
       for (const team of DEFAULT_TEAMS) {
         await createTeam(tournamentId, team.name, team.shortName, team.color, "A");
       }
@@ -540,9 +580,11 @@ export const appRouter = router({
       return { success: true } as const;
     }),
   }),
+  portal: portalRouter,
   tournament: tournamentRouter,
   match: matchRouter,
   seed: seedRouter,
 });
 
 export type AppRouter = typeof appRouter;
+

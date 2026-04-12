@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//e/tabela_jogos_classificação/esporte-total/**)",
+      "Bash(pnpm build:*)",
+      "Bash(pnpm check:*)"
+    ]
+  }
+}

@@ -14,6 +14,7 @@ export const users = mysqlTable("users", {
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  portalId: int("portalId"), // Opcional: vincula um admin a um portal específico
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -22,10 +23,28 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
+// ─── Portals ───────────────────────────────────────────────────────────────────
+
+export const portals = mysqlTable("portals", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 100 }).notNull().unique(),
+  logo: text("logo"),
+  primaryColor: varchar("primaryColor", { length: 7 }).default("#1e3a8a").notNull(),
+  secondaryColor: varchar("secondaryColor", { length: 7 }).default("#f59e0b").notNull(),
+  adminPassword: varchar("adminPassword", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Portal = typeof portals.$inferSelect;
+export type InsertPortal = typeof portals.$inferInsert;
+
 // ─── Tournaments ───────────────────────────────────────────────────────────────
 
 export const tournaments = mysqlTable("tournaments", {
   id: int("id").autoincrement().primaryKey(),
+  portalId: int("portalId").notNull().default(1),
   name: varchar("name", { length: 255 }).notNull(),
   category: varchar("category", { length: 100 }).notNull().default("Geral"),
   status: mysqlEnum("status", ["pending", "group_stage", "semifinals", "final", "finished"])
@@ -33,7 +52,7 @@ export const tournaments = mysqlTable("tournaments", {
     .notNull(),
   champion: varchar("champion", { length: 255 }),
   // Novas configurações profissionais
-  sport: mysqlEnum("sport", ["football", "basketball", "volleyball", "handball"]).default("football").notNull(),
+  sport: mysqlEnum("sport", ["football", "basketball", "volleyball", "handball", "futsal"]).default("football").notNull(),
   groupCount: int("groupCount").default(1).notNull(),
   winPoints: int("winPoints").default(3).notNull(),
   drawPoints: int("drawPoints").default(1).notNull(),
@@ -42,6 +61,7 @@ export const tournaments = mysqlTable("tournaments", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
+
 
 export type Tournament = typeof tournaments.$inferSelect;
 export type InsertTournament = typeof tournaments.$inferInsert;

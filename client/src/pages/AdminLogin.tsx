@@ -1,15 +1,31 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Lock, Shield, ArrowLeft } from "lucide-react";
-import { useLocation } from "wouter";
+import { Lock, Shield, ArrowLeft, Trophy } from "lucide-react";
+import { useLocation, useParams } from "wouter";
 import { toast } from "sonner";
+import { trpc } from "@/lib/trpc";
 
 export default function AdminLogin() {
+  const { portalSlug } = useParams<{ portalSlug?: string }>();
   const [, navigate] = useLocation();
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // Portal Context
+  const { data: portal } = trpc.portal.getBySlug.useQuery(
+    { slug: portalSlug ?? "" },
+    { enabled: !!portalSlug }
+  );
+
+  // Branding Injection
+  useEffect(() => {
+    if (portal) {
+      document.documentElement.style.setProperty('--primary', portal.primaryColor);
+      document.documentElement.style.setProperty('--gold', portal.secondaryColor);
+    }
+  }, [portal]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,13 +36,16 @@ export default function AdminLogin() {
       const response = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ 
+          password,
+          portalId: portal?.id // Backend might use this for portal-specific login
+        }),
       });
 
       if (response.ok) {
         toast.success("Login realizado com sucesso!");
-        // Refresh page to update auth state
-        window.location.href = "/admin";
+        // Refresh page to update auth state and navigate to correct admin dashboard
+        window.location.href = portalSlug ? `/${portalSlug}/admin` : "/admin";
       } else {
         const data = await response.json();
         toast.error(data.error || "Senha incorreta");
@@ -41,20 +60,32 @@ export default function AdminLogin() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background">
       <button 
-        onClick={() => navigate("/")}
+        onClick={() => navigate(portalSlug ? `/${portalSlug}` : "/")}
         className="absolute top-8 left-8 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
-        Voltar para a Home
+        Voltar para {portal?.name || "Home"}
       </button>
 
-      <Card className="w-full max-w-md border-border/50 bg-card/50 glass">
+      <Card className="w-full max-w-md border-border/50 bg-card/50 glass shadow-premium">
         <CardHeader className="text-center">
-          <div className="mx-auto w-12 h-12 rounded-xl gradient-gold flex items-center justify-center shadow-gold mb-4">
-            <Shield className="w-6 h-6 text-amber-950" />
+          <div className="mx-auto w-16 h-16 rounded-2xl flex items-center justify-center mb-4 overflow-hidden">
+            {portal?.logo ? (
+              <img src={portal.logo} alt="Logo" className="w-full h-full object-contain" />
+            ) : (
+              <div className="w-full h-full gradient-gold flex items-center justify-center shadow-gold">
+                <Shield className="w-8 h-8 text-amber-950" />
+              </div>
+            )}
           </div>
-          <CardTitle className="text-2xl font-display font-bold">Acesso Administrativo</CardTitle>
-          <CardDescription>Insira sua senha mestra para gerenciar o sistema</CardDescription>
+          <CardTitle className="text-2xl font-display font-bold">
+            {portal ? `Acesso ${portal.name}` : "Acesso Administrativo"}
+          </CardTitle>
+          <CardDescription>
+            {portal 
+              ? `Faça login para gerenciar a liga ${portal.name}`
+              : "Insira sua senha mestra para gerenciar o sistema"}
+          </CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">
@@ -75,17 +106,23 @@ export default function AdminLogin() {
           <CardFooter>
             <Button 
               type="submit" 
-              className="w-full h-12 gradient-gold text-amber-950 font-bold hover:opacity-90"
+              className="w-full h-12 gradient-gold text-amber-950 font-bold hover:opacity-90 shadow-gold"
               disabled={isLoading}
             >
-              {isLoading ? "Entrando..." : "Acessar Painel"}
+              {isLoading ? (
+                <div className="w-5 h-5 rounded-full border-2 border-amber-950 border-t-transparent animate-spin" />
+              ) : (
+                "Acessar Painel"
+              )}
             </Button>
           </CardFooter>
         </form>
       </Card>
 
       <p className="mt-8 text-xs text-muted-foreground text-center max-w-xs">
-        Este portal é exclusivo para o administrador do sistema APEFI.
+        {portal 
+          ? `Painel de controle exclusivo para administradores da liga ${portal.name}.`
+          : "Este painel é reservado para gestão global de portais e torneios."}
       </p>
     </div>
   );
