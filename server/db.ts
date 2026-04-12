@@ -82,6 +82,7 @@ export async function createTournament(
     drawPoints?: number;
     lossPoints?: number;
     isDoubleRound?: boolean;
+    sport?: "football" | "basketball" | "volleyball" | "handball";
   } = {}
 ) {
   const db = await getDb();
@@ -90,6 +91,7 @@ export async function createTournament(
     name,
     category,
     status: "pending",
+    sport: config.sport ?? "football",
     groupCount: config.groupCount ?? 1,
     winPoints: config.winPoints ?? 3,
     drawPoints: config.drawPoints ?? 1,

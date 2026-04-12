@@ -33,6 +33,7 @@ export const tournaments = mysqlTable("tournaments", {
     .notNull(),
   champion: varchar("champion", { length: 255 }),
   // Novas configurações profissionais
+  sport: mysqlEnum("sport", ["football", "basketball", "volleyball", "handball"]).default("football").notNull(),
   groupCount: int("groupCount").default(1).notNull(),
   winPoints: int("winPoints").default(3).notNull(),
   drawPoints: int("drawPoints").default(1).notNull(),

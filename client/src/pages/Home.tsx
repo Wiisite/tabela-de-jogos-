@@ -15,6 +15,10 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   finished: { label: "Encerrado", color: "bg-green-900/60 text-green-300" },
 };
 
+const SPORT_EMOJI: Record<string, string> = {
+  football: "⚽", basketball: "🏀", volleyball: "🏐", handball: "🤾",
+};
+
 export default function Home() {
   const { user, isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
@@ -200,7 +204,12 @@ export default function Home() {
                     <h3 className="font-display font-semibold text-foreground text-lg leading-snug mb-1">
                       {t.name}
                     </h3>
-                    <p className="text-sm text-muted-foreground mb-4">{t.category}</p>
+                    <p className="text-sm text-muted-foreground mb-2">{t.category}</p>
+                    {(t as any).sport && (
+                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-secondary/40 px-2 py-0.5 rounded-md mb-3">
+                        {SPORT_EMOJI[(t as any).sport] ?? "🏆"} {(t as any).sport === "football" ? "Futebol" : (t as any).sport === "basketball" ? "Basquete" : (t as any).sport === "volleyball" ? "Vôlei" : "Handebol"}
+                      </span>
+                    )}
                     {t.champion && (
                       <div className="flex items-center gap-2 p-2.5 rounded-lg bg-amber-900/20 border border-amber-700/30">
                         <Trophy className="w-3.5 h-3.5 text-gold shrink-0" />

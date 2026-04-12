@@ -4,7 +4,7 @@ import { trpc } from "@/lib/trpc";
 import { getLoginUrl } from "@/const";
 import { useLocation } from "wouter";
 import { Trophy, ArrowLeft, Plus, Trash2, Shield, Shuffle, ImagePlus } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 const TEAM_COLORS = [
@@ -21,6 +21,19 @@ const DEFAULT_TEAMS = [
   { name: "Colégio Canada", shortName: "CDA", color: "#0e7490" },
 ];
 
+type Sport = "football" | "basketball" | "volleyball" | "handball";
+
+const SPORT_CONFIG: Record<Sport, {
+  label: string; emoji: string;
+  defaultPoints: { win: number; draw: number; loss: number };
+  scoreLabel: string; hasPenalties: boolean;
+}> = {
+  football:   { label: "Futebol",   emoji: "⚽", defaultPoints: { win: 3, draw: 1, loss: 0 }, scoreLabel: "Gols",   hasPenalties: true },
+  basketball: { label: "Basquete",  emoji: "🏀", defaultPoints: { win: 2, draw: 0, loss: 0 }, scoreLabel: "Pontos", hasPenalties: false },
+  volleyball: { label: "Vôlei",     emoji: "🏐", defaultPoints: { win: 3, draw: 0, loss: 0 }, scoreLabel: "Sets",   hasPenalties: false },
+  handball:   { label: "Handebol",  emoji: "🤾", defaultPoints: { win: 2, draw: 1, loss: 0 }, scoreLabel: "Gols",   hasPenalties: true },
+};
+
 type TeamInput = { name: string; shortName: string; color: string; logo?: string | null; };
 
 export default function CreateTournament() {
@@ -28,11 +41,20 @@ export default function CreateTournament() {
   const [, navigate] = useLocation();
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
+  const [sport, setSport] = useState<Sport>("football");
   const [groupCount, setGroupCount] = useState<number>(1);
   const [winPoints, setWinPoints] = useState<number>(3);
   const [drawPoints, setDrawPoints] = useState<number>(1);
   const [lossPoints, setLossPoints] = useState<number>(0);
   const [isDoubleRound, setIsDoubleRound] = useState<boolean>(false);
+
+  const handleSportChange = (s: Sport) => {
+    setSport(s);
+    const cfg = SPORT_CONFIG[s].defaultPoints;
+    setWinPoints(cfg.win);
+    setDrawPoints(cfg.draw);
+    setLossPoints(cfg.loss);
+  };
   const [teams, setTeams] = useState<(TeamInput & { groupName: string })[]>(
     DEFAULT_TEAMS.map((t) => ({ ...t, groupName: "A" }))
   );
@@ -75,15 +97,16 @@ export default function CreateTournament() {
       }
     }
 
-    createMutation.mutate({ 
-      name, 
-      category, 
-      groupCount, 
-      winPoints, 
-      drawPoints, 
-      lossPoints, 
-      isDoubleRound, 
-      teams 
+    createMutation.mutate({
+      name,
+      category,
+      sport,
+      groupCount,
+      winPoints,
+      drawPoints,
+      lossPoints,
+      isDoubleRound,
+      teams
     });
   };
 
@@ -162,6 +185,28 @@ export default function CreateTournament() {
               <Trophy className="w-4 h-4 text-gold" />
               Informações do Torneio
             </h2>
+            {/* Sport selector */}
+            <div className="mb-5">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Modalidade</label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {(Object.entries(SPORT_CONFIG) as [Sport, typeof SPORT_CONFIG[Sport]][]).map(([key, cfg]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => handleSportChange(key)}
+                    className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all ${
+                      sport === key
+                        ? "border-gold/60 bg-amber-900/20 text-gold shadow-gold"
+                        : "border-border/50 text-muted-foreground hover:border-border hover:text-foreground"
+                    }`}
+                  >
+                    <span className="text-base">{cfg.emoji}</span>
+                    {cfg.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="grid gap-6 sm:grid-cols-2">
               <div className="sm:col-span-2 grid gap-4 sm:grid-cols-2">
                 <div>
@@ -205,6 +250,7 @@ export default function CreateTournament() {
                     >
                       <option value={1}>Grupo Único</option>
                       <option value={2}>2 Grupos</option>
+                      <option value={3}>3 Grupos</option>
                       <option value={4}>4 Grupos</option>
                     </select>
                   </div>
@@ -227,7 +273,7 @@ export default function CreateTournament() {
                 <div className="grid gap-4 sm:grid-cols-3 mt-6">
                   <div>
                     <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">
-                      Pontos Vitória
+                      Pts Vitória
                     </label>
                     <input
                       type="number"
@@ -238,18 +284,19 @@ export default function CreateTournament() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">
-                      Pontos Empate
+                      Pts Empate
                     </label>
                     <input
                       type="number"
                       value={drawPoints}
                       onChange={(e) => setDrawPoints(parseInt(e.target.value) || 0)}
                       className="w-full px-3 py-2 bg-input border border-border rounded-lg text-foreground text-sm"
+                      disabled={sport === "basketball" || sport === "volleyball"}
                     />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">
-                      Pontos Derrota
+                      Pts Derrota
                     </label>
                     <input
                       type="number"

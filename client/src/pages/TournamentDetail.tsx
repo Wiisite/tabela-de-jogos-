@@ -24,6 +24,14 @@ import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 
 type Tab = "groups" | "standings" | "bracket" | "semifinals" | "final";
+type Sport = "football" | "basketball" | "volleyball" | "handball";
+
+const SPORT_CONFIG: Record<Sport, { label: string; emoji: string; scoreLabel: string; proLabel: string; contraLabel: string; saldoLabel: string; hasPenalties: boolean }> = {
+  football:   { label: "Futebol",  emoji: "⚽", scoreLabel: "Gols",   proLabel: "GP", contraLabel: "GC", saldoLabel: "SG", hasPenalties: true },
+  basketball: { label: "Basquete", emoji: "🏀", scoreLabel: "Pontos", proLabel: "PP", contraLabel: "PC", saldoLabel: "SP", hasPenalties: false },
+  volleyball: { label: "Vôlei",    emoji: "🏐", scoreLabel: "Sets",   proLabel: "SP", contraLabel: "SC", saldoLabel: "SS", hasPenalties: false },
+  handball:   { label: "Handebol", emoji: "🤾", scoreLabel: "Gols",   proLabel: "GP", contraLabel: "GC", saldoLabel: "SG", hasPenalties: true },
+};
 
 function TeamBadge({
   color,
@@ -83,12 +91,14 @@ const PHASE_LABEL_MAP: Record<string, string> = {
 function ScoreModal({
   match,
   teams,
+  sport,
   onClose,
   onSave,
   onReset,
 }: {
   match: MatchForModal;
   teams: { id: number; name: string; shortName: string; color: string; logo?: string | null }[];
+  sport?: Sport;
   onClose: () => void;
   onSave: (matchId: number, home: number, away: number, hp?: number, ap?: number, date?: string, time?: string, loc?: string) => void;
   onReset?: (matchId: number) => void;
@@ -103,10 +113,12 @@ function ScoreModal({
   const [time, setTime] = useState(match.matchTime ?? "");
   const [loc, setLoc] = useState(match.location ?? "");
 
+  const sportCfg = SPORT_CONFIG[sport ?? "football"];
   const isKnockout = match.phase !== "group";
   const isDraw = home === away;
   const hasResult = match.homeScore !== null;
   const phaseLabel = PHASE_LABEL_MAP[match.phase ?? "group"] ?? "Partida";
+  const showPenalties = sportCfg.hasPenalties && isKnockout && isDraw;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -168,8 +180,8 @@ function ScoreModal({
             </div>
           </div>
 
-          {/* Penalties (knockout + draw) */}
-          {isKnockout && isDraw && (
+          {/* Penalties (knockout + draw — only football and handball) */}
+          {showPenalties && (
             <div className="mb-4 p-3 bg-amber-900/10 border border-gold/20 rounded-xl">
               <p className="text-[10px] text-center text-gold font-semibold uppercase tracking-wider mb-2">Pênaltis</p>
               <div className="flex items-center gap-3 justify-center">
@@ -249,7 +261,7 @@ function ScoreModal({
             </Button>
             <Button
               className="flex-1 h-10 gradient-gold text-amber-950 font-semibold hover:opacity-90 shadow-gold"
-              onClick={() => onSave(match.id, home, away, isKnockout && isDraw ? hp : undefined, isKnockout && isDraw ? ap : undefined, date, time, loc)}
+              onClick={() => onSave(match.id, home, away, showPenalties ? hp : undefined, showPenalties ? ap : undefined, date, time, loc)}
             >
               Salvar
             </Button>
@@ -385,6 +397,7 @@ function MatchCard({
 function StandingsTable({
   standings,
   title,
+  sport,
 }: {
   standings: {
     teamId: number;
@@ -402,7 +415,9 @@ function StandingsTable({
     points: number;
   }[];
   title?: string;
+  sport?: Sport;
 }) {
+  const sc = SPORT_CONFIG[sport ?? "football"];
   return (
     <div className="mb-8">
       {title && <h3 className="text-lg font-semibold text-foreground mb-4">Grupo {title}</h3>}
@@ -416,9 +431,9 @@ function StandingsTable({
               <th className="text-center py-3 px-3 text-muted-foreground font-medium">V</th>
               <th className="text-center py-3 px-3 text-muted-foreground font-medium">E</th>
               <th className="text-center py-3 px-3 text-muted-foreground font-medium">D</th>
-              <th className="text-center py-3 px-3 text-muted-foreground font-medium">GP</th>
-              <th className="text-center py-3 px-3 text-muted-foreground font-medium">GC</th>
-              <th className="text-center py-3 px-3 text-muted-foreground font-medium">SG</th>
+              <th className="text-center py-3 px-3 text-muted-foreground font-medium">{sc.proLabel}</th>
+              <th className="text-center py-3 px-3 text-muted-foreground font-medium">{sc.contraLabel}</th>
+              <th className="text-center py-3 px-3 text-muted-foreground font-medium">{sc.saldoLabel}</th>
               <th className="text-center py-3 px-4 text-gold font-semibold">Pts</th>
             </tr>
           </thead>
@@ -824,6 +839,7 @@ export default function TournamentDetail() {
         <ScoreModal
           match={editingMatch}
           teams={teams}
+          sport={(tournament.sport as Sport) ?? "football"}
           onClose={() => setEditingMatch(null)}
           onSave={(matchId, home, away, hp, ap, date, time, loc) => {
             updateScore.mutate({ matchId, homeScore: home, awayScore: away, homePenalties: hp, awayPenalties: ap });
@@ -896,17 +912,22 @@ export default function TournamentDetail() {
                 {tournament.name}
               </h1>
               <p className="text-muted-foreground mt-1">{tournament.category}</p>
-              <div className="flex flex-wrap gap-3 mt-3">
+              <div className="flex flex-wrap gap-2 mt-3">
+                {(() => { const sc = SPORT_CONFIG[(tournament.sport as Sport) ?? "football"]; return (
+                  <span className="text-xs font-semibold px-2 py-1 rounded-md bg-secondary/50 border border-border/50 text-foreground flex items-center gap-1">
+                    <span>{sc.emoji}</span>{sc.label}
+                  </span>
+                ); })()}
                 <span className="text-xs text-muted-foreground flex items-center gap-1 bg-secondary/30 px-2 py-1 rounded-md">
                   <Users className="w-3.5 h-3.5" />
                   {teams.length} equipes
                 </span>
                 <span className="text-xs text-muted-foreground flex items-center gap-1 bg-secondary/30 px-2 py-1 rounded-md">
-                   <Swords className="w-3.5 h-3.5" />
+                  <Swords className="w-3.5 h-3.5" />
                   {matches.length} partidas
                 </span>
-                 <span className="text-xs text-gold flex items-center gap-1 bg-amber-900/20 px-2 py-1 rounded-md border border-gold/20">
-                   <Clock className="w-3.5 h-3.5" />
+                <span className="text-xs text-gold flex items-center gap-1 bg-amber-900/20 px-2 py-1 rounded-md border border-gold/20">
+                  <Clock className="w-3.5 h-3.5" />
                   Sist: {tournament.winPoints}-{tournament.drawPoints}-{tournament.lossPoints}
                 </span>
               </div>
@@ -1064,7 +1085,7 @@ export default function TournamentDetail() {
               </div>
             ) : (
               Object.entries(standingsMap).map(([groupName, groupStandings]) => (
-                <StandingsTable key={groupName} title={groupName} standings={groupStandings} />
+                <StandingsTable key={groupName} title={groupName} standings={groupStandings} sport={(tournament.sport as Sport) ?? "football"} />
               ))
             )}
           </div>

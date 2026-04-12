@@ -213,6 +213,7 @@ const tournamentRouter = router({
       z.object({
         name: z.string().min(1),
         category: z.string().min(1),
+        sport: z.enum(["football", "basketball", "volleyball", "handball"]).default("football"),
         groupCount: z.number().min(1).max(4).default(1),
         winPoints: z.number().default(3),
         drawPoints: z.number().default(1),
@@ -233,6 +234,7 @@ const tournamentRouter = router({
     )
     .mutation(async ({ input }) => {
       const tournamentId = await createTournament(input.name, input.category, {
+        sport: input.sport,
         groupCount: input.groupCount,
         winPoints: input.winPoints,
         drawPoints: input.drawPoints,

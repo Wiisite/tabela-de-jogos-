@@ -2,16 +2,13 @@ import { useEffect } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
-import { getLoginUrl } from "@/const";
 import { useLocation } from "wouter";
 import {
   Trophy,
   ArrowLeft,
   Shield,
-  Users,
   Swords,
   CheckCircle2,
-  Clock,
   ChevronRight,
   LogOut,
   Plus,
@@ -47,7 +44,6 @@ export default function AdminDashboard() {
     );
   }
 
-  const totalMatches = tournaments?.reduce((acc) => acc, 0) ?? 0;
   const activeTournaments = tournaments?.filter(
     (t) => t.status !== "pending" && t.status !== "finished"
   ).length ?? 0;
@@ -177,7 +173,13 @@ export default function AdminDashboard() {
                     </span>
                   </div>
                   <h3 className="font-display font-semibold text-foreground mb-1">{t.name}</h3>
-                  <p className="text-xs text-muted-foreground mb-4">{t.category}</p>
+                  <p className="text-xs text-muted-foreground mb-1">{t.category}</p>
+                  {(t as any).sport && (
+                    <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground bg-secondary/40 px-1.5 py-0.5 rounded mb-3">
+                      {{ football: "⚽", basketball: "🏀", volleyball: "🏐", handball: "🤾" }[(t as any).sport] ?? "🏆"}
+                      {{ football: "Futebol", basketball: "Basquete", volleyball: "Vôlei", handball: "Handebol" }[(t as any).sport] ?? (t as any).sport}
+                    </span>
+                  )}
                   {t.champion && (
                     <div className="flex items-center gap-1.5 text-xs text-amber-300 mb-3">
                       <Trophy className="w-3 h-3 text-gold" />
