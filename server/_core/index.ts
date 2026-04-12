@@ -38,8 +38,16 @@ async function startServer() {
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
-  // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
+
+  // Health check route for panel
+  app.get("/health", (req, res) => res.json({ status: "ok", timestamp: new Date().toISOString() }));
+  app.get("/", (req, res) => {
+    if (process.env.NODE_ENV === "production") {
+      return res.status(200).send("Tournament Manager API is running");
+    }
+    res.json({ ok: true, mode: "development" });
+  });
 
   // Admin Login (Custom Password)
   app.post("/api/admin/login", async (req, res) => {
@@ -104,8 +112,10 @@ async function startServer() {
     console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
   }
 
-  server.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}/`);
+  // Bind to 0.0.0.0 to allow external reachability in containers/IaaS
+  server.listen(port, "0.0.0.0", () => {
+    console.log(`Server running on http://0.0.0.0:${port}/`);
+    console.log(`Local Access: http://localhost:${port}/`);
   });
 }
 
