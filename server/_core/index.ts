@@ -43,19 +43,30 @@ async function startServer() {
 
   // Health check route for panel
   app.get("/health", (req, res) => res.json({ status: "ok", timestamp: new Date().toISOString() }));
-  // Admin Login (Custom Password)
+  // Admin Login (Custom Password or Database User)
   app.post("/api/admin/login", async (req, res) => {
-    const { password, portalId } = req.body;
+    const { email, password, portalId } = req.body;
     
-    // 1. Super Admin Check
-    if (password === process.env.ADMIN_PASSWORD) {
+    // 1. Super Admin Check (Global Env Var)
+    if (password === process.env.ADMIN_PASSWORD && (!email || email === 'admin')) {
       const token = await sdk.createSessionToken(ENV.ownerOpenId, { name: "Super Admin" });
       const cookieOptions = getSessionCookieOptions(req);
       res.cookie(COOKIE_NAME, token, cookieOptions);
       return res.json({ success: true, role: 'admin' });
     }
 
-    // 2. Portal Admin Check
+    // 2. Database User Check (Email + Password)
+    if (email) {
+      const user = await db.getUserByEmail(email);
+      if (user && user.role === 'admin' && user.password === password) {
+        const token = await sdk.createSessionToken(user.openId, { name: user.name || "Admin" });
+        const cookieOptions = getSessionCookieOptions(req);
+        res.cookie(COOKIE_NAME, token, cookieOptions);
+        return res.json({ success: true, role: 'admin', portalId: user.portalId });
+      }
+    }
+
+    // 3. Portal Admin Check (Portal specific password)
     if (portalId) {
       const portal = (await import("../db")).getPortalBySlug; // Wait, let's use a more direct way
       const db = await import("../db");
@@ -111,6 +122,29 @@ async function startServer() {
     console.log(`Server running on http://0.0.0.0:${port}/ (detected from PORT env: ${process.env.PORT || 'not set'})`);
     console.log(`Local Access: http://localhost:${port}/`);
     
+    // Auto-seed requested admin user
+    try {
+      const email = "apefaa1998@gmail.com";
+      const password = "admin_apef_2026"; // Senha temporária
+      const database = await db.getDb();
+      if (database) {
+        const { users: usersTable } = await import("../drizzle/schema");
+        await database.insert(usersTable).values({
+          openId: `manual_master_seed`,
+          name: "Super Admin (ApefA)",
+          email: email,
+          password: password,
+          role: "admin",
+          lastSignedIn: new Date()
+        }).onDuplicateKeyUpdate({
+          set: { password, role: "admin" }
+        });
+        console.log(`[System] Super Admin seed successful for ${email}`);
+      }
+    } catch (e) {
+      console.error("[System] Failed to seed super admin:", e);
+    }
+
     // Quick DB table check to confirm creation
     try {
       const database = await db.getDb();

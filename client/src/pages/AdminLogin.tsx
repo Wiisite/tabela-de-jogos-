@@ -10,6 +10,7 @@ import { trpc } from "@/lib/trpc";
 export default function AdminLogin() {
   const { portalSlug } = useParams<{ portalSlug?: string }>();
   const [, navigate] = useLocation();
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -37,6 +38,7 @@ export default function AdminLogin() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
+          email: email || undefined,
           password,
           portalId: portal?.id // Backend might use this for portal-specific login
         }),
@@ -89,6 +91,18 @@ export default function AdminLogin() {
         </CardHeader>
         <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <div className="relative">
+                <Input
+                  type="email"
+                  placeholder="E-mail (Para login master)"
+                  className="pl-10 h-12 bg-background/50 border-border/60"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+                <Shield className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              </div>
+            </div>
             <div className="space-y-2">
               <div className="relative">
                 <Input
