@@ -14,6 +14,7 @@ import {
   Shield,
   Download,
   Trash2,
+  CheckCircle2,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -337,6 +338,7 @@ function StandingsTable({
     teamName: string;
     shortName: string;
     color: string;
+    logo?: string | null;
     played: number;
     won: number;
     drawn: number;
@@ -426,7 +428,7 @@ function BracketView({
     final: any[];
     third_place: any[];
   };
-  teams: { id: number; name: string; shortName: string; color: string }[];
+  teams: { id: number; name: string; shortName: string; color: string; logo?: string | null }[];
 }) {
   const getTeam = (id: number) => teams.find((t) => t.id === id);
   const getWinner = (m: any) => {
@@ -674,7 +676,8 @@ export default function TournamentDetail() {
         const home = teams.find(t => t.id === m.homeTeamId);
         const away = teams.find(t => t.id === m.awayTeamId);
         const score = m.status === 'finished' ? `${m.homeScore} - ${m.awayScore}` : ' VS ';
-        const phaseLabel = m.phase === 'group' ? `Grupo ${home?.groupName} - Rodada ${m.round}` : m.phase;
+        const PHASE_LABELS: Record<string, string> = { group: `Grupo ${home?.groupName ?? ''} - Rodada ${m.round}`, semifinal: "Semifinal", final: "Final", third_place: "3º Lugar" };
+        const phaseLabel = PHASE_LABELS[m.phase] ?? m.phase;
         return [
           phaseLabel,
           m.matchDate || '-',
@@ -698,7 +701,8 @@ export default function TournamentDetail() {
         const home = teams.find(t => t.id === m.homeTeamId);
         const away = teams.find(t => t.id === m.awayTeamId);
         const score = m.status === 'finished' ? `${m.homeScore} - ${m.awayScore}` : ' VS ';
-        const phaseLabel = m.phase === 'group' ? `Grupo ${home?.groupName} - Rodada ${m.round}` : m.phase;
+        const PHASE_LABELS: Record<string, string> = { group: `Grupo ${home?.groupName ?? ''} - Rodada ${m.round}`, semifinal: "Semifinal", final: "Final", third_place: "3º Lugar" };
+        const phaseLabel = PHASE_LABELS[m.phase] ?? m.phase;
         return [
           phaseLabel,
           m.matchDate || '-',

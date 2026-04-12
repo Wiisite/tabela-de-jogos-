@@ -20,6 +20,43 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 
+// ─── Round-robin schedule helper (circle method) ──────────────────────────────
+
+/**
+ * Generates round-robin pairs using the circle method.
+ * Each round contains non-overlapping games (teams don't play twice per round).
+ * Returns array of { home, away, round } for the turno.
+ */
+function generateCircleSchedule(teamIds: number[]): { home: number; away: number; round: number }[] {
+  const list = [...teamIds];
+  const isOdd = list.length % 2 !== 0;
+  if (isOdd) list.push(-1); // dummy for bye rounds
+
+  const n = list.length;
+  const numRounds = n - 1;
+  const halfSize = n / 2;
+  const result: { home: number; away: number; round: number }[] = [];
+
+  const fixed = list[0];
+  const rotating = list.slice(1);
+
+  for (let round = 0; round < numRounds; round++) {
+    const current = [fixed, ...rotating];
+    for (let i = 0; i < halfSize; i++) {
+      const home = current[i];
+      const away = current[n - 1 - i];
+      if (home !== -1 && away !== -1) {
+        result.push({ home, away, round: round + 1 });
+      }
+    }
+    // Rotate: keep first element fixed, rotate the rest
+    const last = rotating.pop()!;
+    rotating.unshift(last);
+  }
+
+  return result;
+}
+
 // ─── Standings helper ──────────────────────────────────────────────────────────
 
 type StandingEntry = {
@@ -226,24 +263,22 @@ const tournamentRouter = router({
         groups[t.groupName].push(t);
       }
 
-      let round = 1;
       for (const groupName in groups) {
         const groupTeams = groups[groupName];
         if (groupTeams.length < 2) continue;
 
+        const turno = generateCircleSchedule(groupTeams.map((t) => t.id));
+
         // Turno
-        for (let i = 0; i < groupTeams.length; i++) {
-          for (let j = i + 1; j < groupTeams.length; j++) {
-            await createMatch(input.tournamentId, "group", groupTeams[i].id, groupTeams[j].id, round);
-          }
+        for (const { home, away, round } of turno) {
+          await createMatch(input.tournamentId, "group", home, away, round);
         }
 
-        // Returno
+        // Returno (reverse fixtures, rounds continue after turno)
         if (tournament.isDoubleRound) {
-          for (let i = 0; i < groupTeams.length; i++) {
-            for (let j = i + 1; j < groupTeams.length; j++) {
-              await createMatch(input.tournamentId, "group", groupTeams[j].id, groupTeams[i].id, round + 1);
-            }
+          const numTurnoRounds = turno.length > 0 ? Math.max(...turno.map((g) => g.round)) : 0;
+          for (const { home, away, round } of turno) {
+            await createMatch(input.tournamentId, "group", away, home, numTurnoRounds + round);
           }
         }
       }
@@ -299,11 +334,11 @@ const tournamentRouter = router({
       if (existing.length > 0) throw new TRPCError({ code: "BAD_REQUEST", message: "Semifinais já geradas" });
 
       const pointsConfig = { win: tournament.winPoints, draw: tournament.drawPoints, loss: tournament.lossPoints };
-      const groupNames = [...new Set(teamList.map((t) => t.groupName))].sort();
-      
+
       if (tournament.groupCount === 1) {
         const standings = computeStandings(teamList, groupMatches, pointsConfig);
         if (standings.length < 4) throw new TRPCError({ code: "BAD_REQUEST", message: "Mínimo 4 equipes para semis" });
+        // 1º vs 4º, 2º vs 3º
         await createMatch(input.tournamentId, "semifinal", standings[0].teamId, standings[3].teamId, 1);
         await createMatch(input.tournamentId, "semifinal", standings[1].teamId, standings[2].teamId, 2);
       } else if (tournament.groupCount === 2) {
@@ -313,6 +348,24 @@ const tournamentRouter = router({
         // A1 vs B2, B1 vs A2
         await createMatch(input.tournamentId, "semifinal", sA[0].teamId, sB[1].teamId, 1);
         await createMatch(input.tournamentId, "semifinal", sB[0].teamId, sA[1].teamId, 2);
+      } else if (tournament.groupCount === 3) {
+        // 3 grupos: A1, B1, C1 + melhor 2º colocado de todos os grupos
+        const sA = computeStandings(teamList.filter(t => t.groupName === "A"), groupMatches, pointsConfig);
+        const sB = computeStandings(teamList.filter(t => t.groupName === "B"), groupMatches, pointsConfig);
+        const sC = computeStandings(teamList.filter(t => t.groupName === "C"), groupMatches, pointsConfig);
+        if (!sA[0] || !sB[0] || !sC[0]) throw new TRPCError({ code: "BAD_REQUEST", message: "Mínimo 1 equipe por grupo" });
+        // Melhor 2º colocado (por pontos, vitórias, saldo de gols, gols pró)
+        const runners = [sA[1], sB[1], sC[1]].filter(Boolean).sort((a, b) => {
+          if (b.points !== a.points) return b.points - a.points;
+          if (b.won !== a.won) return b.won - a.won;
+          if (b.goalDiff !== a.goalDiff) return b.goalDiff - a.goalDiff;
+          return b.goalsFor - a.goalsFor;
+        });
+        if (!runners[0]) throw new TRPCError({ code: "BAD_REQUEST", message: "Mínimo 2 equipes por grupo para gerar semis" });
+        const bestRunner = runners[0];
+        // Semifinais: A1 vs bestRunner, B1 vs C1
+        await createMatch(input.tournamentId, "semifinal", sA[0].teamId, bestRunner.teamId, 1);
+        await createMatch(input.tournamentId, "semifinal", sB[0].teamId, sC[0].teamId, 2);
       } else if (tournament.groupCount === 4) {
         const sA = computeStandings(teamList.filter(t => t.groupName === "A"), groupMatches, pointsConfig);
         const sB = computeStandings(teamList.filter(t => t.groupName === "B"), groupMatches, pointsConfig);
@@ -322,7 +375,7 @@ const tournamentRouter = router({
         await createMatch(input.tournamentId, "semifinal", sA[0].teamId, sD[0].teamId, 1);
         await createMatch(input.tournamentId, "semifinal", sB[0].teamId, sC[0].teamId, 2);
       } else {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "Formato de grupos não suportado para geração automática de semis" });
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Formato de grupos não suportado" });
       }
 
       await updateTournamentStatus(input.tournamentId, "semifinals");
