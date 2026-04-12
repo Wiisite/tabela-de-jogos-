@@ -43,13 +43,6 @@ async function startServer() {
 
   // Health check route for panel
   app.get("/health", (req, res) => res.json({ status: "ok", timestamp: new Date().toISOString() }));
-  app.get("/", (req, res) => {
-    if (process.env.NODE_ENV === "production") {
-      return res.status(200).send("Tournament Manager API is running");
-    }
-    res.json({ ok: true, mode: "development" });
-  });
-
   // Admin Login (Custom Password)
   app.post("/api/admin/login", async (req, res) => {
     const { password, portalId } = req.body;
