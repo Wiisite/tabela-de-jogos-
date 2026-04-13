@@ -128,7 +128,7 @@ async function startServer() {
       const password = "@coi2046WII#"; 
       const database = await db.getDb();
       if (database) {
-        const { users: usersTable } = await import("../drizzle/schema");
+        const { users: usersTable } = await import("../../drizzle/schema");
         await database.insert(usersTable).values({
           openId: `manual_master_seed`,
           name: "Super Admin (ApefA)",

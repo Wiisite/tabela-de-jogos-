@@ -213,9 +213,9 @@ export default function CreatePortal() {
               type="submit"
               size="lg"
               className="w-full gradient-gold text-amber-950 font-bold shadow-gold hover:opacity-90 py-8"
-              disabled={createMutation.isLoading}
+              disabled={createMutation.isPending}
             >
-              {createMutation.isLoading ? "Criando..." : "Criar Liga Profissional"}
+              {createMutation.isPending ? "Criando..." : "Criar Liga Profissional"}
             </Button>
           </div>
         </form>

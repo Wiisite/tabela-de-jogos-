@@ -1,5 +1,5 @@
 import { drizzle } from "drizzle-orm/mysql2";
-import { users } from "../drizzle/schema";
+import { users } from "../../drizzle/schema";
 import "dotenv/config";
 import { nanoid } from "nanoid";
 

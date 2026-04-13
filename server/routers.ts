@@ -347,7 +347,7 @@ const tournamentRouter = router({
       };
 
       // Calculate standings per group
-      const groups = [...new Set(teamList.map((t) => t.groupName))].sort();
+      const groups = Array.from(new Set(teamList.map((t) => t.groupName))).sort();
       const standingsByGroup: Record<string, StandingEntry[]> = {};
 
       for (const g of groups) {
