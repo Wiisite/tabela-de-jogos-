@@ -299,6 +299,7 @@ const tournamentRouter = router({
         primaryColor: z.string().nullable().optional(),
         secondaryColor: z.string().nullable().optional(),
         fontFamily: z.string().nullable().optional(),
+        description: z.string().nullable().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -317,6 +318,7 @@ const tournamentRouter = router({
         primaryColor: input.primaryColor,
         secondaryColor: input.secondaryColor,
         fontFamily: input.fontFamily,
+        description: input.description,
       });
 
       // Insert teams with their assigned groups
@@ -344,6 +346,7 @@ const tournamentRouter = router({
         primaryColor: z.string().nullable().optional(),
         secondaryColor: z.string().nullable().optional(),
         fontFamily: z.string().nullable().optional(),
+        description: z.string().nullable().optional(),
         teams: z
           .array(
             z.object({

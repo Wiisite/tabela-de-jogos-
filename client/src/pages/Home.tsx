@@ -25,6 +25,7 @@ export default function Home() {
   const { user, isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
   const { portalSlug } = useParams<{ portalSlug?: string }>();
+  const [selectedSport, setSelectedSport] = useState<string>("all");
 
   // Global list of portals (for landing page)
   const { data: allPortals } = trpc.portal.list.useQuery(undefined, {
@@ -263,6 +264,22 @@ export default function Home() {
               </Button>
             )}
           </div>
+          
+          <div className="flex gap-2 overflow-x-auto pb-4 mb-6 scrollbar-hide">
+            {["all", "football", "futsal", "basketball", "volleyball", "handball"].map((s) => (
+              <button
+                key={s}
+                onClick={() => setSelectedSport(s)}
+                className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest whitespace-nowrap transition-all border ${
+                  selectedSport === s
+                    ? "bg-gray-900 text-white border-gray-900 shadow-md"
+                    : "bg-white text-gray-500 border-gray-200 hover:border-gray-900 hover:text-gray-900"
+                }`}
+              >
+                {s === "all" ? "Todos" : SPORT_LABEL[s] || s}
+              </button>
+            ))}
+          </div>
 
           {!tournaments || tournaments.length === 0 ? (
             <div className="text-center py-20 border border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
@@ -271,7 +288,9 @@ export default function Home() {
             </div>
           ) : (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {tournaments.map((t) => {
+              {tournaments
+                .filter(t => selectedSport === "all" || t.sport === selectedSport)
+                .map((t) => {
                 const status = STATUS_LABELS[t.status] ?? STATUS_LABELS.pending;
                 return (
                   <button

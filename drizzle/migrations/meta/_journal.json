@@ -29,6 +29,13 @@
       "when": 1776122122190,
       "tag": "0003_dashing_green_goblin",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1776122677530,
+      "tag": "0004_clammy_cassandra_nova",
+      "breakpoints": true
     }
   ]
 }

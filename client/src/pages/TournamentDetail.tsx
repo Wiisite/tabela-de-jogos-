@@ -470,21 +470,42 @@ export default function TournamentDetail() {
              )}
           </div>
         ) : (
-          <div className="bg-card border border-border/50 rounded-3xl p-8 mb-8 relative overflow-hidden shadow-premium">
-            <div className="absolute top-0 right-0 p-10 opacity-5"><Trophy className="w-40 h-40 text-gold" /></div>
-            <div className="relative">
-              <div className="flex gap-2 mb-4">
-                <span className="px-3 py-1 bg-gold/10 border border-gold/20 text-gold text-[10px] font-bold uppercase rounded-full">{sportCfg.emoji} {sportCfg.label}</span>
-                <span className="px-3 py-1 bg-secondary text-muted-foreground text-[10px] font-bold uppercase rounded-full">{tournament.category}</span>
+          <section 
+            className="relative overflow-hidden py-24 sm:py-32 rounded-3xl mb-10 border border-gray-100 shadow-premium"
+            style={portal?.banner ? {
+              backgroundImage: `linear-gradient(to bottom, rgba(17, 24, 39, 0.7), rgba(17, 24, 39, 0.9)), url(${portal.banner})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            } : { backgroundColor: 'var(--primary)' }}
+          >
+            <div className="container relative text-center z-10">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/20 bg-white/10 text-white/80 backdrop-blur-md text-[10px] font-bold mb-6 tracking-widest uppercase">
+                {sportCfg.emoji} {sportCfg.label}
               </div>
-              <h1 className="font-display text-4xl font-bold mb-4">{tournament.name}</h1>
-              <div className="flex gap-6 text-sm text-muted-foreground">
+              <h1 className="font-display text-4xl sm:text-6xl font-bold text-white mb-5 leading-tight drop-shadow-md">
+                {tournament.name}
+              </h1>
+              <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-white/80 drop-shadow-sm">
                  <span className="flex items-center gap-1.5 font-medium"><Users className="w-4 h-4 text-gold" /> {teams.length} Equipes</span>
                  <span className="flex items-center gap-1.5 font-medium"><Swords className="w-4 h-4 text-gold" /> {matches.length} Jogos</span>
+                 <span className="flex items-center gap-1.5 font-medium"><Calendar className="w-4 h-4 text-gold" /> {tournament.category}</span>
                  {tournament.champion && <span className="flex items-center gap-1.5 text-gold font-bold"><Star className="w-4 h-4 fill-gold animate-pulse" /> Campeão: {tournament.champion}</span>}
               </div>
             </div>
-          </div>
+          </section>
+        )}
+
+        {/* About Section */}
+        {tournament.description && (
+          <section className="mb-10 p-8 bg-white border border-gray-100 rounded-3xl shadow-sm">
+            <h2 className="font-display text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Star className="w-5 h-5 text-gold" />
+              Sobre o Torneio
+            </h2>
+            <div className="prose prose-gray max-w-none text-gray-600 leading-relaxed whitespace-pre-wrap">
+              {tournament.description}
+            </div>
+          </section>
         )}
 
         {isAdmin && (

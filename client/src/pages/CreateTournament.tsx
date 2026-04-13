@@ -54,6 +54,7 @@ export default function CreateTournament() {
   const [primaryColor, setPrimaryColor] = useState("");
   const [secondaryColor, setSecondaryColor] = useState("");
   const [fontFamily, setFontFamily] = useState("Inter");
+  const [description, setDescription] = useState("");
 
   // Portal Context
   const { data: portal } = trpc.portal.getBySlug.useQuery(
@@ -136,6 +137,7 @@ export default function CreateTournament() {
       primaryColor,
       secondaryColor,
       fontFamily,
+      description: description || null,
       teams
     });
   };
@@ -262,6 +264,18 @@ export default function CreateTournament() {
                     placeholder="Ex: Sub-9 Masculino"
                     className="w-full px-4 py-3 bg-secondary/20 border border-border/60 rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-gold/50 text-sm font-medium"
                   />
+                </div>
+                <div>
+                   <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">
+                     Sobre o Torneio / Regras
+                   </label>
+                   <textarea
+                     value={description}
+                     onChange={(e) => setDescription(e.target.value)}
+                     placeholder="Escreva detalhes sobre o formato, premiação ou regras específicas..."
+                     rows={3}
+                     className="w-full px-4 py-3 bg-secondary/20 border border-border/60 rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-gold/50 text-sm font-medium resize-none"
+                   />
                 </div>
               </div>
 

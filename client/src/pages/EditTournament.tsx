@@ -48,6 +48,7 @@ export default function EditTournament() {
   const [primaryColor, setPrimaryColor] = useState("");
   const [secondaryColor, setSecondaryColor] = useState("");
   const [fontFamily, setFontFamily] = useState("Inter");
+  const [description, setDescription] = useState("");
 
   const { data: source, isLoading: dataLoading } = trpc.tournament.getById.useQuery({ id: tournamentId });
   const { data: portal } = trpc.portal.getBySlug.useQuery({ slug: portalSlug ?? "" }, { enabled: !!portalSlug });
@@ -68,6 +69,7 @@ export default function EditTournament() {
       setPrimaryColor(t.primaryColor || portal?.primaryColor || "#1e3a8a");
       setSecondaryColor(t.secondaryColor || portal?.secondaryColor || "#f59e0b");
       setFontFamily(t.fontFamily || portal?.fontFamily || "Inter");
+      setDescription(t.description || "");
       setTeams(source.teams.map(team => ({
         id: team.id,
         name: team.name,
@@ -139,6 +141,7 @@ export default function EditTournament() {
       primaryColor,
       secondaryColor,
       fontFamily,
+      description: description || null,
       teams
     });
   };
@@ -198,6 +201,16 @@ export default function EditTournament() {
                 <div>
                   <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">Categoria</label>
                   <input type="text" value={category} onChange={(e) => setCategory(e.target.value)} className="w-full px-4 py-3 bg-secondary/20 border border-border/60 rounded-xl text-foreground focus:ring-1 focus:ring-gold/50 text-sm font-medium" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">Sobre o Torneio / Regras</label>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Escreva detalhes sobre o formato, premiação ou regras específicas..."
+                    rows={3}
+                    className="w-full px-4 py-3 bg-secondary/20 border border-border/60 rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-gold/50 text-sm font-medium resize-none"
+                  />
                 </div>
               </div>
 

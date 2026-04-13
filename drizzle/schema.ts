@@ -70,6 +70,7 @@ export const tournaments = mysqlTable("tournaments", {
   primaryColor: varchar("primaryColor", { length: 7 }),
   secondaryColor: varchar("secondaryColor", { length: 7 }),
   fontFamily: varchar("fontFamily", { length: 100 }),
+  description: longtext("description"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
