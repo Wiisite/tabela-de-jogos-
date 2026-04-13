@@ -200,6 +200,8 @@ export async function updateTournament(
     lossPoints?: number;
     isDoubleRound?: boolean;
     champion?: string | null;
+    slider?: string | null;
+    sponsors?: string | null;
   }
 ) {
   const db = await getDb();

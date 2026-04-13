@@ -326,6 +326,8 @@ const tournamentRouter = router({
         lossPoints: z.number().optional(),
         isDoubleRound: z.boolean().optional(),
         champion: z.string().nullable().optional(),
+        slider: z.string().nullable().optional(),
+        sponsors: z.string().nullable().optional(),
         teams: z
           .array(
             z.object({

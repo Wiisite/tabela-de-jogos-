@@ -376,6 +376,19 @@ export default function TournamentDetail() {
   const isAdmin = isAuthenticated;
   const sportCfg = SPORT_CONFIG[tournament.sport as Sport] ?? SPORT_CONFIG.football;
 
+  const sliderImgs: string[] = tournament.slider ? JSON.parse(tournament.slider) : [];
+  const sponsorsList: { name: string; logo: string }[] = tournament.sponsors ? JSON.parse(tournament.sponsors) : [];
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  useEffect(() => {
+    if (sliderImgs.length > 1) {
+      const timer = setInterval(() => {
+        setCurrentSlide(prev => (prev + 1) % sliderImgs.length);
+      }, 5000);
+      return () => clearInterval(timer);
+    }
+  }, [sliderImgs]);
+
   const exportStandingsPDF = () => {
     if (!standingsMap) return;
     const doc = new jsPDF();
@@ -419,27 +432,54 @@ export default function TournamentDetail() {
       </header>
 
       <main className="container pt-6 pb-20">
-        {portal?.banner && (
-          <div className="w-full h-48 sm:h-64 rounded-3xl overflow-hidden mb-8 border border-border/50 shadow-premium">
-             <img src={portal.banner} className="w-full h-full object-cover" alt="Banner da Liga" />
+        {/* HERO SLIDER */}
+        {sliderImgs.length > 0 ? (
+          <div className="relative w-full h-[300px] sm:h-[450px] rounded-3xl overflow-hidden mb-10 shadow-2xl group">
+             {sliderImgs.map((img, idx) => (
+                <div key={idx} className={`absolute inset-0 transition-opacity duration-1000 ${idx === currentSlide ? "opacity-100" : "opacity-0"}`}>
+                   <img src={img} className="w-full h-full object-cover" alt="Tournament Slide" />
+                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                </div>
+             ))}
+             
+             <div className="absolute bottom-10 left-10 right-10 z-10">
+                <div className="flex gap-2 mb-4">
+                  <span className="px-3 py-1 bg-gold/20 border border-gold/30 backdrop-blur-md text-gold text-[10px] font-bold uppercase rounded-full shadow-gold">{sportCfg.emoji} {sportCfg.label}</span>
+                  <span className="px-3 py-1 bg-white/10 backdrop-blur-md text-white border border-white/20 text-[10px] font-bold uppercase rounded-full">{tournament.category}</span>
+                </div>
+                <h1 className="font-display text-4xl sm:text-6xl font-bold text-white mb-4 drop-shadow-xl">{tournament.name}</h1>
+                <div className="flex gap-6 text-sm text-white/80 font-medium">
+                   <span className="flex items-center gap-1.5"><Users className="w-4 h-4 text-gold" /> {teams.length} Equipes</span>
+                   <span className="flex items-center gap-1.5"><Swords className="w-4 h-4 text-gold" /> {matches.length} Jogos</span>
+                   {tournament.champion && <span className="flex items-center gap-1.5 text-gold font-bold"><Star className="w-4 h-4 fill-gold animate-pulse" /> Campeão: {tournament.champion}</span>}
+                </div>
+             </div>
+
+             {sliderImgs.length > 1 && (
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+                   {sliderImgs.map((_, idx) => (
+                      <button key={idx} onClick={() => setCurrentSlide(idx)} className={`w-2 h-2 rounded-full transition-all ${idx === currentSlide ? "bg-gold w-6" : "bg-white/40"}`} />
+                   ))}
+                </div>
+             )}
+          </div>
+        ) : (
+          <div className="bg-card border border-border/50 rounded-3xl p-8 mb-8 relative overflow-hidden shadow-premium">
+            <div className="absolute top-0 right-0 p-10 opacity-5"><Trophy className="w-40 h-40 text-gold" /></div>
+            <div className="relative">
+              <div className="flex gap-2 mb-4">
+                <span className="px-3 py-1 bg-gold/10 border border-gold/20 text-gold text-[10px] font-bold uppercase rounded-full">{sportCfg.emoji} {sportCfg.label}</span>
+                <span className="px-3 py-1 bg-secondary text-muted-foreground text-[10px] font-bold uppercase rounded-full">{tournament.category}</span>
+              </div>
+              <h1 className="font-display text-4xl font-bold mb-4">{tournament.name}</h1>
+              <div className="flex gap-6 text-sm text-muted-foreground">
+                 <span className="flex items-center gap-1.5 font-medium"><Users className="w-4 h-4 text-gold" /> {teams.length} Equipes</span>
+                 <span className="flex items-center gap-1.5 font-medium"><Swords className="w-4 h-4 text-gold" /> {matches.length} Jogos</span>
+                 {tournament.champion && <span className="flex items-center gap-1.5 text-gold font-bold"><Star className="w-4 h-4 fill-gold animate-pulse" /> Campeão: {tournament.champion}</span>}
+              </div>
+            </div>
           </div>
         )}
-
-        <div className="bg-card border border-border/50 rounded-3xl p-8 mb-8 relative overflow-hidden shadow-premium">
-          <div className="absolute top-0 right-0 p-10 opacity-5"><Trophy className="w-40 h-40 text-gold" /></div>
-          <div className="relative">
-            <div className="flex gap-2 mb-4">
-              <span className="px-3 py-1 bg-gold/10 border border-gold/20 text-gold text-[10px] font-bold uppercase rounded-full">{sportCfg.emoji} {sportCfg.label}</span>
-              <span className="px-3 py-1 bg-secondary text-muted-foreground text-[10px] font-bold uppercase rounded-full">{tournament.category}</span>
-            </div>
-            <h1 className="font-display text-4xl font-bold mb-4">{tournament.name}</h1>
-            <div className="flex gap-6 text-sm text-muted-foreground">
-               <span className="flex items-center gap-1.5 font-medium"><Users className="w-4 h-4 text-gold" /> {teams.length} Equipes</span>
-               <span className="flex items-center gap-1.5 font-medium"><Swords className="w-4 h-4 text-gold" /> {matches.length} Jogos</span>
-               {tournament.champion && <span className="flex items-center gap-1.5 text-gold font-bold"><Star className="w-4 h-4 fill-gold animate-pulse" /> Campeão: {tournament.champion}</span>}
-            </div>
-          </div>
-        </div>
 
         {isAdmin && (
            <div className="flex flex-wrap gap-2 mb-8 bg-secondary/10 p-4 rounded-2xl border border-border/40">
@@ -492,6 +532,23 @@ export default function TournamentDetail() {
                 {matches.filter((m:any) => m.phase !== 'group').map((m:any) => <MatchCard key={m.id} match={m} teams={teams} isAdmin={isAdmin} onEdit={setEditingMatch} />)}
              </div>
           </div>
+        )}
+
+        {/* SPONSORS SECTION */}
+        {sponsorsList.length > 0 && (
+           <div className="mt-20 pt-10 border-t border-border/30">
+              <p className="text-center text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mb-8">Nossos Parceiros & Apoio</p>
+              <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-16 opacity-70 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-500">
+                 {sponsorsList.map((s, idx) => (
+                    <div key={idx} className="flex flex-col items-center gap-2 group">
+                       <div className="w-16 h-16 sm:w-24 sm:h-24 bg-secondary/20 rounded-2xl flex items-center justify-center p-4 border border-border/50 group-hover:border-gold/30 transition-all">
+                          {s.logo ? <img src={s.logo} className="w-full h-full object-contain" alt={s.name} /> : <Shield className="w-8 h-8 text-muted-foreground" />}
+                       </div>
+                       <span className="text-[10px] font-bold text-muted-foreground group-hover:text-gold transition-colors">{s.name}</span>
+                    </div>
+                 ))}
+              </div>
+           </div>
         )}
       </main>
 

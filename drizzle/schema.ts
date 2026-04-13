@@ -62,6 +62,8 @@ export const tournaments = mysqlTable("tournaments", {
   drawPoints: int("drawPoints").default(1).notNull(),
   lossPoints: int("lossPoints").default(0).notNull(),
   isDoubleRound: int("isDoubleRound").default(0).notNull(), // 0=false, 1=true
+  slider: longtext("slider"), // JSON array of base64 images
+  sponsors: longtext("sponsors"), // JSON array of { name, logo }
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
