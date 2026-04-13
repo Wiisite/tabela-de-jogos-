@@ -53,19 +53,20 @@ function TeamBadge({
   return (
     <div className="flex items-center gap-2">
       <div
-        className={`${sizes[size]} rounded-lg flex items-center justify-center font-bold text-white shrink-0 overflow-hidden truncate px-0.5`}
-        style={{ background: logo ? 'transparent' : color }}
+        className={`${sizes[size]} rounded-lg flex items-center justify-center font-bold text-white shrink-0 overflow-hidden px-0.5 border border-white/10`}
+        style={{ background: color }}
       >
         {logo ? (
-          <div 
-            className="w-full h-full bg-contain bg-center bg-no-repeat"
-            style={{ backgroundImage: `url(${logo})` }}
+          <img 
+            src={logo}
+            className="w-full h-full object-contain"
+            alt={short}
           />
         ) : (
           short.slice(0, 3)
         )}
       </div>
-      {name && <span className="text-sm font-medium text-foreground truncate">{name}</span>}
+      {name && <span className="text-sm font-semibold text-foreground truncate">{name}</span>}
     </div>
   );
 }
@@ -201,8 +202,11 @@ function MatchCard({ match, teams, isAdmin, onEdit }: any) {
   return (
     <div className={`bg-card border rounded-xl p-4 transition-all ${finished ? "border-border/40" : "border-border/60 hover:border-gold/30"}`}>
       <div className="flex items-center gap-3">
-        <div className="flex-1 flex items-center gap-2 justify-end">
-          {homeTeam && <><span className="text-sm font-medium text-foreground text-right truncate max-w-[120px]">{homeTeam.name}</span><TeamBadge color={homeTeam.color} short={homeTeam.shortName} logo={homeTeam.logo} size="sm" /></>}
+        <div className="flex-1 flex items-center gap-3 justify-end min-w-0">
+          {homeTeam && <>
+            <span className="text-sm font-bold text-foreground text-right truncate flex-1 min-w-0">{homeTeam.name}</span>
+            <TeamBadge color={homeTeam.color} short={homeTeam.shortName} logo={homeTeam.logo} size="sm" />
+          </>}
         </div>
         <div className="flex flex-col items-center gap-1 shrink-0">
           {finished ? (
@@ -214,8 +218,11 @@ function MatchCard({ match, teams, isAdmin, onEdit }: any) {
           ) : <div className="px-3 py-1.5 bg-secondary rounded-lg font-bold text-xs text-muted-foreground">VS</div>}
           {finished && hasPenalties && <span className="text-[10px] text-gold font-bold">({match.homePenalties}-{match.awayPenalties})</span>}
         </div>
-        <div className="flex-1 flex items-center gap-2">
-          {awayTeam && <><TeamBadge color={awayTeam.color} short={awayTeam.shortName} logo={awayTeam.logo} size="sm" /><span className="text-sm font-medium text-foreground truncate max-w-[120px]">{awayTeam.name}</span></>}
+        <div className="flex-1 flex items-center gap-3 min-w-0">
+          {awayTeam && <>
+            <TeamBadge color={awayTeam.color} short={awayTeam.shortName} logo={awayTeam.logo} size="sm" />
+            <span className="text-sm font-bold text-foreground truncate flex-1 min-w-0">{awayTeam.name}</span>
+          </>}
         </div>
       </div>
       <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/30">
@@ -345,6 +352,7 @@ export default function TournamentDetail() {
     if (portal) {
       document.documentElement.style.setProperty('--primary', portal.primaryColor);
       document.documentElement.style.setProperty('--gold', portal.secondaryColor);
+      document.documentElement.style.fontFamily = portal.fontFamily || "Inter";
     }
   }, [portal]);
 
@@ -400,14 +408,23 @@ export default function TournamentDetail() {
           </div>
           {isAdmin && (
             <div className="flex gap-2">
-              <Button size="sm" variant="outline" className="text-gold border-gold/30" onClick={() => navigate(portalSlug ? `/${portalSlug}/admin` : "/admin")}>Painel Admin</Button>
+              <Button size="sm" variant="outline" className="text-gold border-gold/30" onClick={() => navigate(portalSlug ? `/${portalSlug}/tournament/${tournamentId}/edit` : `/tournament/${tournamentId}/edit`)}>
+                <Settings className="w-3.5 h-3.5 mr-1.5" />
+                Editar Torneio
+              </Button>
               <Button size="sm" variant="destructive" onClick={() => window.confirm("Excluir torneio?") && deleteTournament.mutate({ id: tournamentId })}><Trash2 className="w-3.5 h-3.5" /></Button>
             </div>
           )}
         </div>
       </header>
 
-      <main className="container pt-10">
+      <main className="container pt-6 pb-20">
+        {portal?.banner && (
+          <div className="w-full h-48 sm:h-64 rounded-3xl overflow-hidden mb-8 border border-border/50 shadow-premium">
+             <img src={portal.banner} className="w-full h-full object-cover" alt="Banner da Liga" />
+          </div>
+        )}
+
         <div className="bg-card border border-border/50 rounded-3xl p-8 mb-8 relative overflow-hidden shadow-premium">
           <div className="absolute top-0 right-0 p-10 opacity-5"><Trophy className="w-40 h-40 text-gold" /></div>
           <div className="relative">
@@ -417,9 +434,9 @@ export default function TournamentDetail() {
             </div>
             <h1 className="font-display text-4xl font-bold mb-4">{tournament.name}</h1>
             <div className="flex gap-6 text-sm text-muted-foreground">
-               <span className="flex items-center gap-1.5"><Users className="w-4 h-4" /> {teams.length} Equipes</span>
-               <span className="flex items-center gap-1.5"><Swords className="w-4 h-4" /> {matches.length} Jogos</span>
-               {tournament.champion && <span className="flex items-center gap-1.5 text-gold font-bold"><Star className="w-4 h-4 fill-gold" /> Campeão: {tournament.champion}</span>}
+               <span className="flex items-center gap-1.5 font-medium"><Users className="w-4 h-4 text-gold" /> {teams.length} Equipes</span>
+               <span className="flex items-center gap-1.5 font-medium"><Swords className="w-4 h-4 text-gold" /> {matches.length} Jogos</span>
+               {tournament.champion && <span className="flex items-center gap-1.5 text-gold font-bold"><Star className="w-4 h-4 fill-gold animate-pulse" /> Campeão: {tournament.champion}</span>}
             </div>
           </div>
         </div>

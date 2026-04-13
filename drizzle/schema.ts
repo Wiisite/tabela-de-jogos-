@@ -34,6 +34,8 @@ export const portals = mysqlTable("portals", {
   logo: longtext("logo"),
   primaryColor: varchar("primaryColor", { length: 7 }).default("#1e3a8a").notNull(),
   secondaryColor: varchar("secondaryColor", { length: 7 }).default("#f59e0b").notNull(),
+  banner: longtext("banner"),
+  fontFamily: varchar("fontFamily", { length: 100 }).default("Inter").notNull(),
   adminPassword: varchar("adminPassword", { length: 255 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

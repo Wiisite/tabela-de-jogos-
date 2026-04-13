@@ -11,6 +11,8 @@ import CreateTournament from "./pages/CreateTournament";
 import CreatePortal from "./pages/CreatePortal";
 import AdminLogin from "./pages/AdminLogin";
 
+import EditTournament from "./pages/EditTournament";
+
 function Router() {
   return (
     <Switch>
@@ -23,6 +25,7 @@ function Router() {
       {/* Rotas de Portal (Tenant) */}
       <Route path="/:portalSlug" component={Home} />
       <Route path="/:portalSlug/tournament/:id" component={TournamentDetail} />
+      <Route path="/:portalSlug/tournament/:id/edit" component={EditTournament} />
       <Route path="/:portalSlug/admin" component={AdminDashboard} />
       <Route path="/:portalSlug/create" component={CreateTournament} />
       <Route path="/:portalSlug/login-admin" component={AdminLogin} />

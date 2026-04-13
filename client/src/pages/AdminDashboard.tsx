@@ -36,6 +36,7 @@ const SPORT_CONFIG: Record<string, { emoji: string; label: string }> = {
 
 export default function AdminDashboard() {
   const { user, isAuthenticated, loading, logout } = useAuth();
+  const [activeTab, setActiveTab] = useState<"tournaments" | "settings">("tournaments");
   const [, navigate] = useLocation();
   const { portalSlug } = useParams<{ portalSlug?: string }>();
 
@@ -200,13 +201,18 @@ export default function AdminDashboard() {
         {/* --- PORTAL ADMIN OR SUPER ADMIN IN PORTAL CONTEXT --- */}
         {(isPortalAdmin || (isSuperAdmin && portalSlug)) && (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-10">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
               {[
                 { icon: Trophy, label: "Total de Torneios", value: tournaments?.length ?? 0, color: "text-gold" },
                 { icon: Swords, label: "Em Andamento", value: activeTournaments, color: "text-blue-400" },
                 { icon: CheckCircle2, label: "Encerrados", value: tournaments?.filter((t) => t.status === "finished").length ?? 0, color: "text-green-400" },
-              ].map(({ icon: Icon, label, value, color }) => (
-                <div key={label} className="bg-card border border-border/50 rounded-2xl p-5 shadow-premium">
+                { icon: Settings, label: "Personalização", value: "Ajustar", isConfig: true, color: "text-zinc-400" },
+              ].map(({ icon: Icon, label, value, color, isConfig }) => (
+                <div 
+                  key={label} 
+                  className={`bg-card border border-border/50 rounded-2xl p-5 shadow-premium transition-all ${isConfig ? 'hover:border-gold/50 cursor-pointer' : ''}`}
+                  onClick={() => isConfig && setActiveTab("settings")}
+                >
                   <Icon className={`w-5 h-5 ${color} mb-3`} />
                   <div className="text-2xl font-display font-bold text-foreground mb-1">{value}</div>
                   <div className="text-xs text-muted-foreground">{label}</div>
@@ -214,65 +220,189 @@ export default function AdminDashboard() {
               ))}
             </div>
 
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="font-display text-xl font-semibold text-foreground">Torneios da Liga</h2>
-              <Button size="sm" className="gradient-gold text-amber-950 font-bold" onClick={() => navigate(`/${portalSlug}/create`)}>
-                <Plus className="w-4 h-4 mr-1" /> Novo Torneio
-              </Button>
+            <div className="flex gap-1 p-1 bg-secondary/30 rounded-2xl mb-8 w-fit">
+              {["tournaments", "settings"].map((t: any) => (
+                <button
+                  key={t}
+                  onClick={() => setActiveTab(t)}
+                  className={`px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${
+                    activeTab === t
+                      ? "bg-card text-gold shadow-premium border border-border/50"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {t === "tournaments" ? "Torneios" : "Visual & Cores"}
+                </button>
+              ))}
             </div>
 
-            {!tournaments || tournaments.length === 0 ? (
-              <div className="text-center py-16 border border-dashed border-border/40 rounded-2xl">
-                <Trophy className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
-                <p className="text-muted-foreground text-sm mb-4">Nenhum torneio criado nesta liga.</p>
-                <Button size="sm" className="gradient-gold text-amber-950 font-bold" onClick={() => navigate(`/${portalSlug}/create`)}>
-                  Criar Torneio
-                </Button>
-              </div>
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {tournaments.map((t) => {
-                  const status = STATUS_LABELS[t.status] ?? STATUS_LABELS.pending;
-                  const sport = SPORT_CONFIG[t.sport] || { emoji: "🏆", label: t.sport };
-                  return (
-                    <div key={t.id} className="bg-card border border-border/50 rounded-2xl p-5 shadow-premium hover:border-gold/30 transition-all">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="w-10 h-10 rounded-xl gradient-gold flex items-center justify-center shadow-gold">
-                          <Trophy className="w-5 h-5 text-amber-950" />
-                        </div>
-                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${status.color}`}>
-                          {status.label}
-                        </span>
-                      </div>
-                      <h3 className="font-bold text-foreground mb-1">{t.name}</h3>
-                      <p className="text-xs text-muted-foreground mb-3">{t.category}</p>
-                      
-                      <div className="flex items-center gap-1.5 mb-4">
-                        <span className="text-[10px] font-bold text-muted-foreground bg-secondary/50 px-2.5 py-1 rounded-full uppercase">
-                           {sport.emoji} {sport.label}
-                        </span>
-                      </div>
+            {activeTab === "tournaments" ? (
+              <>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="font-display text-xl font-semibold text-foreground">Torneios da Liga</h2>
+                  <Button size="sm" className="gradient-gold text-amber-950 font-bold" onClick={() => navigate(`/${portalSlug}/create`)}>
+                    <Plus className="w-4 h-4 mr-1" /> Novo Torneio
+                  </Button>
+                </div>
 
-                      {t.champion && (
-                        <div className="flex items-center gap-1.5 text-xs text-amber-300 mb-4 bg-amber-900/10 p-2 rounded-lg">
-                          <Trophy className="w-3 h-3 text-gold" />
-                          Campeão: {t.champion}
+                {!tournaments || tournaments.length === 0 ? (
+                  <div className="text-center py-16 border border-dashed border-border/40 rounded-2xl">
+                    <Trophy className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
+                    <p className="text-muted-foreground text-sm mb-4">Nenhum torneio criado nesta liga.</p>
+                    <Button size="sm" className="gradient-gold text-amber-950 font-bold" onClick={() => navigate(`/${portalSlug}/create`)}>
+                      Criar Torneio
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {tournaments.map((t) => {
+                      const status = STATUS_LABELS[t.status] ?? STATUS_LABELS.pending;
+                      const sport = SPORT_CONFIG[t.sport] || { emoji: "🏆", label: t.sport };
+                      return (
+                        <div key={t.id} className="bg-card border border-border/50 rounded-2xl p-5 shadow-premium hover:border-gold/30 transition-all">
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="w-10 h-10 rounded-xl gradient-gold flex items-center justify-center shadow-gold">
+                              <Trophy className="w-5 h-5 text-amber-950" />
+                            </div>
+                            <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${status.color}`}>
+                              {status.label}
+                            </span>
+                          </div>
+                          <h3 className="font-bold text-foreground mb-1">{t.name}</h3>
+                          <p className="text-xs text-muted-foreground mb-3">{t.category}</p>
+                          
+                          <div className="flex items-center gap-1.5 mb-4">
+                            <span className="text-[10px] font-bold text-muted-foreground bg-secondary/50 px-2.5 py-1 rounded-full uppercase">
+                               {sport.emoji} {sport.label}
+                            </span>
+                          </div>
+
+                          {t.champion && (
+                            <div className="flex items-center gap-1.5 text-xs text-amber-300 mb-4 bg-amber-900/10 p-2 rounded-lg">
+                              <Trophy className="w-3 h-3 text-gold" />
+                              Campeão: {t.champion}
+                            </div>
+                          )}
+                          <div className="flex gap-2">
+                            <Button size="sm" className="flex-1 gradient-gold text-amber-950 font-bold text-xs" onClick={() => navigate(`/${portalSlug}/tournament/${t.id}`)}>
+                              Gerenciar
+                              <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                            </Button>
+                          </div>
                         </div>
-                      )}
-                      <div className="flex gap-2">
-                        <Button size="sm" className="flex-1 gradient-gold text-amber-950 font-bold text-xs" onClick={() => navigate(`/${portalSlug}/tournament/${t.id}`)}>
-                          Gerenciar
-                          <ChevronRight className="w-3.5 h-3.5 ml-1" />
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
+            ) : (
+              <PortalSettings portal={portal!} />
             )}
           </>
         )}
       </main>
+    </div>
+  );
+}
+
+function PortalSettings({ portal }: { portal: any }) {
+  const [name, setName] = useState(portal.name);
+  const [primary, setPrimary] = useState(portal.primaryColor);
+  const [secondary, setSecondary] = useState(portal.secondaryColor);
+  const [font, setFont] = useState(portal.fontFamily || "Inter");
+  const [logo, setLogo] = useState(portal.logo);
+  const [banner, setBanner] = useState(portal.banner);
+
+  const updateMutation = trpc.portal.update.useMutation({
+    onSuccess: () => toast.success("Configurações salvas!"),
+    onError: (e) => toast.error(e.message),
+  });
+
+  const handleSave = () => {
+    updateMutation.mutate({
+      id: portal.id,
+      name,
+      primaryColor: primary,
+      secondaryColor: secondary,
+      fontFamily: font,
+      logo,
+      banner
+    });
+  };
+
+  return (
+    <div className="bg-card border border-border/50 rounded-3xl p-8 shadow-premium max-w-2xl">
+      <h2 className="text-xl font-bold mb-8 flex items-center gap-2">
+        <Settings className="w-5 h-5 text-gold" />
+        Configurações Visuais da Liga
+      </h2>
+
+      <div className="space-y-8">
+        <div className="grid gap-6 sm:grid-cols-2">
+           <div>
+              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-2">Identidade (Logo)</label>
+              <label className="cursor-pointer block w-20 h-20 rounded-2xl border-2 border-dashed border-border/60 hover:border-gold/50 transition-all overflow-hidden relative group">
+                <input type="file" className="hidden" onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => setLogo(reader.result as string);
+                    reader.readAsDataURL(file);
+                  }
+                }} />
+                {logo ? <img src={logo} className="w-full h-full object-contain" /> : <div className="flex items-center justify-center h-full"><Plus className="w-5 h-5 text-muted-foreground" /></div>}
+              </label>
+           </div>
+           <div>
+              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-2">Capa / Banner da Liga</label>
+              <label className="cursor-pointer block h-20 rounded-2xl border-2 border-dashed border-border/60 hover:border-gold/50 transition-all overflow-hidden relative group">
+                <input type="file" className="hidden" onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => setBanner(reader.result as string);
+                    reader.readAsDataURL(file);
+                  }
+                }} />
+                {banner ? <img src={banner} className="w-full h-full object-cover" /> : <div className="flex items-center justify-center h-full text-[10px] text-muted-foreground font-bold">CLIQUE PARA SUBIR BANNER</div>}
+              </label>
+           </div>
+        </div>
+
+        <div className="space-y-4">
+           <label className="block text-[10px] font-bold text-muted-foreground uppercase">Tipografia (Fonte)</label>
+           <select 
+             value={font} 
+             onChange={(e) => setFont(e.target.value)}
+             className="w-full px-4 py-3 bg-secondary/20 border border-border/60 rounded-xl text-foreground"
+           >
+              <option value="Inter">Inter (Padrão)</option>
+              <option value="Montserrat">Montserrat (Esportivo)</option>
+              <option value="Playfair Display">Playfair (Clássico)</option>
+              <option value="Outfit">Outfit (Moderno)</option>
+              <option value="Roboto">Roboto (Clean)</option>
+           </select>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+           <div className="p-4 bg-secondary/10 rounded-2xl border border-border/40">
+              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-3 text-center">Cor Primária</label>
+              <input type="color" value={primary} onChange={e => setPrimary(e.target.value)} className="w-full h-10 rounded-lg cursor-pointer bg-transparent border-none" />
+           </div>
+           <div className="p-4 bg-secondary/10 rounded-2xl border border-border/40">
+              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-3 text-center">Cor Secundária (Destaque)</label>
+              <input type="color" value={secondary} onChange={e => setSecondary(e.target.value)} className="w-full h-10 rounded-lg cursor-pointer bg-transparent border-none" />
+           </div>
+        </div>
+
+        <Button 
+          className="w-full h-14 gradient-gold text-amber-950 font-bold rounded-2xl"
+          onClick={handleSave}
+          disabled={updateMutation.isPending}
+        >
+          {updateMutation.isPending ? "Salvando..." : "Salvar Customização"}
+        </Button>
+      </div>
     </div>
   );
 }

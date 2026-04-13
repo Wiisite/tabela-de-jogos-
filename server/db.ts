@@ -110,6 +110,23 @@ export async function deletePortal(id: number) {
   await db.delete(portals).where(eq(portals.id, id));
 }
 
+export async function updatePortal(
+  id: number,
+  data: {
+    name?: string;
+    logo?: string | null;
+    banner?: string | null;
+    primaryColor?: string;
+    secondaryColor?: string;
+    fontFamily?: string;
+    adminPassword?: string;
+  }
+) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(portals).set(data).where(eq(portals.id, id));
+}
+
 // ─── Tournaments ───────────────────────────────────────────────────────────────
 
 export async function getAllTournaments(portalId?: number) {
@@ -171,6 +188,31 @@ export async function updateTournamentStatus(
     .where(eq(tournaments.id, id));
 }
 
+export async function updateTournament(
+  id: number,
+  data: {
+    name?: string;
+    category?: string;
+    sport?: "football" | "basketball" | "volleyball" | "handball" | "futsal";
+    groupCount?: number;
+    winPoints?: number;
+    drawPoints?: number;
+    lossPoints?: number;
+    isDoubleRound?: boolean;
+    champion?: string | null;
+  }
+) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  
+  const updateSet: any = { ...data };
+  if (data.isDoubleRound !== undefined) {
+    updateSet.isDoubleRound = data.isDoubleRound ? 1 : 0;
+  }
+
+  await db.update(tournaments).set(updateSet).where(eq(tournaments.id, id));
+}
+
 export async function deleteTournament(id: number) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
@@ -199,6 +241,27 @@ export async function createTeam(
   const db = await getDb();
   if (!db) throw new Error("DB not available");
   await db.insert(teams).values({ tournamentId, name, shortName, color, groupName, logo });
+}
+
+export async function updateTeam(
+  id: number,
+  data: {
+    name?: string;
+    shortName?: string;
+    color?: string;
+    groupName?: string;
+    logo?: string | null;
+  }
+) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(teams).set(data).where(eq(teams.id, id));
+}
+
+export async function deleteTeam(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(teams).where(eq(teams.id, id));
 }
 
 // ─── Matches ───────────────────────────────────────────────────────────────────
@@ -231,6 +294,18 @@ export async function createMatch(
   const db = await getDb();
   if (!db) throw new Error("DB not available");
   await db.insert(matches).values({ tournamentId, phase, homeTeamId, awayTeamId, round });
+}
+
+export async function deleteMatchesByTournament(
+  tournamentId: number,
+  phase?: "group" | "semifinal" | "final" | "third_place"
+) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const condition = phase 
+    ? and(eq(matches.tournamentId, tournamentId), eq(matches.phase, phase))
+    : eq(matches.tournamentId, tournamentId);
+  await db.delete(matches).where(condition);
 }
 
 export async function updateMatchScore(

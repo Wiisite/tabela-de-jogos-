@@ -49,10 +49,12 @@ export default function Home() {
     if (portal) {
       document.documentElement.style.setProperty('--primary', portal.primaryColor);
       document.documentElement.style.setProperty('--gold', portal.secondaryColor);
+      document.documentElement.style.fontFamily = portal.fontFamily || "Inter";
       document.title = `${portal.name} - Portal de Esportes`;
     } else {
       document.documentElement.style.removeProperty('--primary');
       document.documentElement.style.removeProperty('--gold');
+      document.documentElement.style.fontFamily = "Inter";
       document.title = "LEGG - LIGA DAS ESCOLAS DE GUARULHOS";
     }
   }, [portal]);
@@ -192,8 +194,13 @@ export default function Home() {
       </header>
 
       {/* Hero */}
-      <section className="relative overflow-hidden py-20">
+      <section className="relative overflow-hidden py-16">
         <div className="container relative text-center">
+          {portal?.banner && (
+            <div className="w-full h-48 sm:h-72 rounded-3xl overflow-hidden mb-10 border border-border/50 shadow-premium">
+              <img src={portal.banner} className="w-full h-full object-cover" alt="Banner da Liga" />
+            </div>
+          )}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-border/60 bg-card/50 text-[10px] font-bold text-muted-foreground mb-6 tracking-widest uppercase">
             <Star className="w-3 h-3 text-gold" />
             Portal Oficial de Torneios

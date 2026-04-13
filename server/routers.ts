@@ -13,12 +13,17 @@ import {
   updateMatchScore,
   updateMatchDetails,
   updateTournamentStatus,
+  updateTournament,
   deleteTournament,
   resetMatchScore,
   getAllPortals,
   getPortalBySlug,
   createPortal,
+  updatePortal,
   deletePortal,
+  updateTeam,
+  deleteTeam,
+  deleteMatchesByTournament,
 } from "./db";
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
@@ -215,6 +220,23 @@ const portalRouter = router({
     await deletePortal(input.id);
     return { ok: true };
   }),
+  update: protectedProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        logo: z.string().nullable().optional(),
+        banner: z.string().nullable().optional(),
+        primaryColor: z.string().optional(),
+        secondaryColor: z.string().optional(),
+        fontFamily: z.string().optional(),
+        adminPassword: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      await updatePortal(input.id, input);
+      return { ok: true };
+    }),
 });
 
 // ─── Tournament Router ─────────────────────────────────────────────────────────
@@ -291,15 +313,85 @@ const tournamentRouter = router({
       return { id: tournamentId };
     }),
 
+  update: protectedProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        category: z.string().optional(),
+        sport: z.enum(["football", "basketball", "volleyball", "handball", "futsal"]).optional(),
+        groupCount: z.number().min(1).max(4).optional(),
+        winPoints: z.number().optional(),
+        drawPoints: z.number().optional(),
+        lossPoints: z.number().optional(),
+        isDoubleRound: z.boolean().optional(),
+        champion: z.string().nullable().optional(),
+        teams: z
+          .array(
+            z.object({
+              id: z.number().optional(), // If provided, update; else create
+              name: z.string().min(1),
+              shortName: z.string().min(1).max(10),
+              color: z.string(),
+              groupName: z.string().default("A"),
+              logo: z.string().nullable().optional(),
+            })
+          )
+          .optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const { id, teams: inputTeams, ...updateData } = input;
+      
+      // Update basic info
+      await updateTournament(id, updateData);
+
+      // Systematically reconcile teams if provided
+      if (inputTeams) {
+        const existingTeams = await getTeamsByTournament(id);
+        const existingIds = existingTeams.map(t => t.id);
+        const inputIds = inputTeams.map(t => t.id).filter((tid): tid is number => !!tid);
+
+        // Delete removed teams
+        for (const et of existingTeams) {
+          if (!inputIds.includes(et.id)) {
+            await deleteTeam(et.id);
+          }
+        }
+
+        // Update or Create
+        for (const it of inputTeams) {
+          if (it.id && existingIds.includes(it.id)) {
+            await updateTeam(it.id, {
+              name: it.name,
+              shortName: it.shortName,
+              color: it.color,
+              groupName: it.groupName,
+              logo: it.logo
+            });
+          } else {
+            await createTeam(id, it.name, it.shortName, it.color, it.groupName, it.logo);
+          }
+        }
+      }
+
+      return { ok: true };
+    }),
+
   generateGroupMatches: protectedProcedure
-    .input(z.object({ tournamentId: z.number() }))
+    .input(z.object({ tournamentId: z.number(), clearExisting: z.boolean().default(false) }))
     .mutation(async ({ input }) => {
       const tournament = await getTournamentById(input.tournamentId);
       if (!tournament) throw new TRPCError({ code: "NOT_FOUND" });
+
+      if (input.clearExisting) {
+        await deleteMatchesByTournament(input.tournamentId, "group");
+      } else {
+        const existing = await getMatchesByPhase(input.tournamentId, "group");
+        if (existing.length > 0) throw new TRPCError({ code: "BAD_REQUEST", message: "Confrontos já gerados" });
+      }
+
       const teamList = await getTeamsByTournament(input.tournamentId);
-      
-      const existing = await getMatchesByPhase(input.tournamentId, "group");
-      if (existing.length > 0) throw new TRPCError({ code: "BAD_REQUEST", message: "Confrontos já gerados" });
 
       // Group teams by groupName
       const groups: Record<string, typeof teamList> = {};
