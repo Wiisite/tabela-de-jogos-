@@ -231,6 +231,9 @@ const portalRouter = router({
         secondaryColor: z.string().optional(),
         fontFamily: z.string().optional(),
         adminPassword: z.string().optional(),
+        heroTitle: z.string().nullable().optional(),
+        heroSubtitle: z.string().nullable().optional(),
+        aboutText: z.string().nullable().optional(),
       })
     )
     .mutation(async ({ input }) => {

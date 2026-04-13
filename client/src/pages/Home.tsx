@@ -195,22 +195,26 @@ export default function Home() {
       </header>
 
       {/* Hero */}
-      <section className="relative overflow-hidden py-10 sm:py-16 bg-white">
-        <div className="container relative text-center">
-          {portal?.banner && (
-            <div className="w-full h-48 sm:h-80 rounded-2xl overflow-hidden mb-10 border border-gray-100 shadow-sm relative">
-              <img src={portal.banner} className="w-full h-full object-cover" alt="Banner da Liga" />
-            </div>
-          )}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-gray-200 bg-gray-50 text-[10px] font-bold text-gray-500 mb-6 tracking-widest uppercase">
+      <section 
+        className={`relative overflow-hidden ${portal?.banner ? 'py-24 sm:py-40' : 'py-16 sm:py-24 bg-white border-b border-gray-100'}`}
+        style={portal?.banner ? {
+          backgroundImage: `linear-gradient(to bottom, rgba(17, 24, 39, 0.7), rgba(17, 24, 39, 0.9)), url(${portal.banner})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        } : undefined}
+      >
+        <div className="container relative text-center z-10">
+          <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border ${portal?.banner ? 'border-white/20 bg-white/10 text-white/80 backdrop-blur-md' : 'border-gray-200 bg-gray-50 text-gray-500'} text-[10px] font-bold mb-6 tracking-widest uppercase`}>
             <Star className="w-3 h-3" style={{ color: 'var(--gold)' }} />
             Portal Oficial de Torneios
           </div>
-          <h1 className="font-display text-4xl sm:text-6xl font-bold text-gray-900 mb-5 leading-tight">
-            Acompanhe a <span style={{ color: 'var(--primary)' }}>{portal?.name}</span>
+          <h1 className={`font-display text-4xl sm:text-6xl font-bold mb-5 leading-tight ${portal?.banner ? 'text-white drop-shadow-md' : 'text-gray-900'}`}>
+            {portal?.heroTitle || (
+              <>Acompanhe a <span style={{ color: 'var(--primary)' }}>{portal?.name}</span></>
+            )}
           </h1>
-          <p className="text-gray-500 text-lg max-w-xl mx-auto mb-8 leading-relaxed">
-            Resultados em tempo real, tabelas de classificação e toda a emoção dos esportes escolares.
+          <p className={`text-lg max-w-xl mx-auto mb-8 leading-relaxed ${portal?.banner ? 'text-white/80 drop-shadow-sm' : 'text-gray-500'}`}>
+            {portal?.heroSubtitle || "Resultados em tempo real, tabelas de classificação e toda a emoção dos esportes escolares."}
           </p>
         </div>
       </section>
@@ -235,6 +239,18 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* About text */}
+      {portal?.aboutText && (
+        <section className="py-16 bg-white border-b border-gray-100">
+          <div className="container max-w-3xl">
+            <h2 className="font-display text-2xl font-bold text-gray-900 mb-6 text-center">Sobre a Liga</h2>
+            <div className="prose prose-gray max-w-none text-gray-600 leading-relaxed whitespace-pre-wrap text-center">
+              {portal.aboutText}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Tournament List */}
       <section className="py-16 bg-white">

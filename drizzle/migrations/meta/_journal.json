@@ -22,6 +22,13 @@
       "when": 1776119039445,
       "tag": "0002_kind_wong",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1776122122190,
+      "tag": "0003_dashing_green_goblin",
+      "breakpoints": true
     }
   ]
 }

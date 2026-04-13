@@ -312,6 +312,9 @@ function PortalSettings({ portal }: { portal: any }) {
   const [font, setFont] = useState(portal.fontFamily || "Inter");
   const [logo, setLogo] = useState(portal.logo);
   const [banner, setBanner] = useState(portal.banner);
+  const [heroTitle, setHeroTitle] = useState(portal.heroTitle || "");
+  const [heroSubtitle, setHeroSubtitle] = useState(portal.heroSubtitle || "");
+  const [aboutText, setAboutText] = useState(portal.aboutText || "");
 
   const updateMutation = trpc.portal.update.useMutation({
     onSuccess: () => toast.success("Configurações salvas!"),
@@ -326,7 +329,10 @@ function PortalSettings({ portal }: { portal: any }) {
       secondaryColor: secondary,
       fontFamily: font,
       logo,
-      banner
+      banner,
+      heroTitle: heroTitle || null,
+      heroSubtitle: heroSubtitle || null,
+      aboutText: aboutText || null,
     });
   };
 
@@ -354,7 +360,7 @@ function PortalSettings({ portal }: { portal: any }) {
               </label>
            </div>
            <div>
-              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-2">Capa / Banner da Liga</label>
+              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-2">Capa / Background (Tela Cheia)</label>
               <label className="cursor-pointer block h-20 rounded-2xl border-2 border-dashed border-border/60 hover:border-gold/50 transition-all overflow-hidden relative group">
                 <input type="file" className="hidden" onChange={(e) => {
                   const file = e.target.files?.[0];
@@ -364,9 +370,36 @@ function PortalSettings({ portal }: { portal: any }) {
                     reader.readAsDataURL(file);
                   }
                 }} />
-                {banner ? <img src={banner} className="w-full h-full object-cover" /> : <div className="flex items-center justify-center h-full text-[10px] text-muted-foreground font-bold">CLIQUE PARA SUBIR BANNER</div>}
+                {banner ? <img src={banner} className="w-full h-full object-cover" /> : <div className="flex items-center justify-center h-full text-[10px] text-muted-foreground font-bold">CARREGAR PLANO DE FUNDO</div>}
               </label>
            </div>
+        </div>
+
+        <div className="space-y-4">
+           <label className="block text-[10px] font-bold text-muted-foreground uppercase">Título Principal na Página</label>
+           <input 
+             type="text" 
+             value={heroTitle} 
+             onChange={(e) => setHeroTitle(e.target.value)} 
+             placeholder={`Ex: Acompanhe a ${portal.name}`}
+             className="w-full px-4 py-3 bg-secondary/20 border border-border/60 rounded-xl text-foreground"
+           />
+           <label className="block text-[10px] font-bold text-muted-foreground uppercase mt-4">Subtítulo</label>
+           <input 
+             type="text" 
+             value={heroSubtitle} 
+             onChange={(e) => setHeroSubtitle(e.target.value)} 
+             placeholder="Resultados em tempo real, tabelas..."
+             className="w-full px-4 py-3 bg-secondary/20 border border-border/60 rounded-xl text-foreground"
+           />
+           <label className="block text-[10px] font-bold text-muted-foreground uppercase mt-4">Sobre a Liga (Texto Longo para a Home)</label>
+           <textarea 
+             value={aboutText} 
+             onChange={(e) => setAboutText(e.target.value)} 
+             placeholder="Escreva sobre a organização, regras gerais, ou patrocinadores..."
+             rows={4}
+             className="w-full px-4 py-3 bg-secondary/20 border border-border/60 rounded-xl text-foreground resize-none"
+           />
         </div>
 
         <div className="space-y-4">
