@@ -2,8 +2,15 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
 import { useLocation, useParams } from "wouter";
-import { Trophy, Plus, ChevronRight, Shield, Users, Calendar, Star, LayoutGrid, ArrowRight } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Trophy, Plus, ChevronRight, Shield, Users, Calendar, Star, LayoutGrid, ArrowRight, FileText, ChevronDown, Download } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   pending: { label: "Aguardando", color: "bg-zinc-700 text-zinc-300" },
@@ -26,6 +33,7 @@ export default function Home() {
   const [, navigate] = useLocation();
   const { portalSlug } = useParams<{ portalSlug?: string }>();
   const [selectedSport, setSelectedSport] = useState<string>("all");
+  const tournamentListRef = useRef<HTMLDivElement>(null);
 
   // Global list of portals (for landing page)
   const { data: allPortals } = trpc.portal.list.useQuery(undefined, {
@@ -149,6 +157,18 @@ export default function Home() {
     );
   }
 
+  const downloadPDF = (base64: string, filename: string) => {
+    const link = document.createElement("a");
+    link.href = base64;
+    link.download = filename;
+    link.click();
+  };
+
+  const scrollToTournaments = (sport?: string) => {
+    if (sport) setSelectedSport(sport);
+    tournamentListRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   // --- LOCAL PORTAL PAGE ---
   return (
     <div className="min-h-screen bg-white text-gray-900">
@@ -170,6 +190,61 @@ export default function Home() {
               {portal?.name || "Carregando..."}
             </span>
           </div>
+          <nav className="hidden md:flex items-center gap-6">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="text-sm font-bold text-gray-600 hover:text-gray-900 border-none">
+                  Modalidades <ChevronDown className="ml-1 w-3.5 h-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56 rounded-xl shadow-xl border-gray-100">
+                {Object.entries(SPORT_LABEL).map(([key, label]) => (
+                  <DropdownMenuItem 
+                    key={key} 
+                    className="flex items-center gap-2 py-3 cursor-pointer text-xs font-bold uppercase transition-colors hover:bg-gray-50"
+                    onClick={() => scrollToTournaments(key)}
+                  >
+                    <span>{SPORT_EMOJI[key]}</span>
+                    {label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="text-sm font-bold text-gray-600 hover:text-gray-900 border-none">
+                  Regulamentos <ChevronDown className="ml-1 w-3.5 h-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64 rounded-xl shadow-xl border-gray-100">
+                <DropdownMenuItem 
+                  className="flex items-center gap-2 py-3 cursor-pointer text-xs font-bold uppercase text-primary"
+                  onClick={() => portal?.generalRegulation && downloadPDF(portal.generalRegulation, `regulamento_geral_${portal.slug}.pdf`)}
+                  disabled={!portal?.generalRegulation}
+                >
+                  <FileText className="w-4 h-4" />
+                  Regulamento Geral
+                  {!portal?.generalRegulation && <span className="ml-auto text-[8px] opacity-40">(EM BREVE)</span>}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <div className="px-2 py-2 text-[10px] font-bold text-muted-foreground uppercase opacity-50">Por Categoria</div>
+                {tournaments?.filter(t => t.regulation).map((t) => (
+                  <DropdownMenuItem 
+                    key={t.id} 
+                    className="flex items-center gap-2 py-3 cursor-pointer text-[10px] font-bold uppercase"
+                    onClick={() => t.regulation && downloadPDF(t.regulation, `regulamento_${t.name.toLowerCase().replace(/ /g, '_')}.pdf`)}
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    {t.name}
+                  </DropdownMenuItem>
+                ))}
+                {(!tournaments || tournaments.filter(t => t.regulation).length === 0) && (
+                  <div className="px-3 py-4 text-center text-[10px] text-muted-foreground italic">Nenhum regulamento disponível</div>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </nav>
           <nav className="flex items-center gap-3">
             {isAuthenticated ? (
               <Button
@@ -199,15 +274,15 @@ export default function Home() {
       <section 
         className={`relative overflow-hidden ${portal?.banner ? 'py-24 sm:py-40' : 'py-16 sm:py-24 bg-white border-b border-gray-100'}`}
         style={portal?.banner ? {
-          backgroundImage: `linear-gradient(to bottom, rgba(17, 24, 39, 0.7), rgba(17, 24, 39, 0.9)), url(${portal.banner})`,
+          backgroundImage: `linear-gradient(to bottom, rgba(17, 24, 39, ${ (portal.heroOverlayOpacity ?? 80) / 100 }), rgba(17, 24, 39, ${ Math.min((portal.heroOverlayOpacity ?? 80) + 10, 100) / 100 })), url(${portal.banner})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         } : undefined}
       >
         <div className="container relative text-center z-10">
-          <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border ${portal?.banner ? 'border-white/20 bg-white/10 text-white/80 backdrop-blur-md' : 'border-gray-200 bg-gray-50 text-gray-500'} text-[10px] font-bold mb-6 tracking-widest uppercase`}>
-            <Star className="w-3 h-3" style={{ color: 'var(--gold)' }} />
-            Portal Oficial de Torneios
+          <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border ${portal?.banner ? 'border-white/20 bg-white/10 text-white/80 backdrop-blur-md' : 'border-gray-200 bg-gray-50 text-gray-500'} text-[10px] font-bold mb-6 tracking-widest uppercase animate-in fade-in slide-in-from-bottom-4 duration-1000`}>
+            <Star className="w-3 h-3 fill-gold" />
+            {portal?.heroBadgeLabel || "Portal Oficial de Torneios"}
           </div>
           <h1 className={`font-display text-4xl sm:text-6xl font-bold mb-5 leading-tight ${portal?.banner ? 'text-white drop-shadow-md' : 'text-gray-900'}`}>
             {portal?.heroTitle || (
@@ -254,7 +329,7 @@ export default function Home() {
       )}
 
       {/* Tournament List */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-white" ref={tournamentListRef}>
         <div className="container">
           <div className="flex items-center justify-between mb-8">
             <h2 className="font-display text-2xl font-bold text-gray-900">Competições</h2>

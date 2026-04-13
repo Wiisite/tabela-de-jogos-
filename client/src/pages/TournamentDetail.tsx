@@ -17,9 +17,18 @@ import {
   CheckCircle2,
   X,
   Settings,
-  Image as ImageIcon
+  Image as ImageIcon,
+  ChevronDown,
+  FileText
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -390,6 +399,13 @@ export default function TournamentDetail() {
   const generateFinal = trpc.tournament.generateFinal.useMutation({ onSuccess: () => { refetch(); refetchBracket(); setActiveTab("bracket"); toast.success("Finais geradas!"); } });
   const deleteTournament = trpc.tournament.delete.useMutation({ onSuccess: () => { toast.success("Torneio excluído."); navigate(portalSlug ? `/${portalSlug}/admin` : "/admin"); } });
 
+  const downloadPDF = (base64: string, filename: string) => {
+    const link = document.createElement("a");
+    link.href = base64;
+    link.download = filename;
+    link.click();
+  };
+
   if (!data || !tournament) return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 rounded-full border-2 border-gold border-t-transparent animate-spin" /></div>;
 
   const isAdmin = isAuthenticated;
@@ -423,17 +439,55 @@ export default function TournamentDetail() {
             <Button variant="ghost" size="sm" onClick={() => navigate(portalSlug ? `/${portalSlug}` : "/")} className="text-gray-600 hover:text-gray-900 hover:bg-gray-100"><ArrowLeft className="w-4 h-4 mr-1.5" /> Página Inicial</Button>
             <div className="w-px h-5 bg-gray-200" />
             {portal?.logo ? <img src={portal.logo} className="h-8 object-contain" /> : <Shield className="w-6 h-6" style={{ color: 'var(--primary)' }} />}
-            <span className="font-bold text-sm hidden sm:block text-gray-900">{portal?.name || "TournamentPro"}</span>
           </div>
-          {isAdmin && (
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline" className="border-gray-200 bg-white text-gray-700 hover:bg-gray-50" onClick={() => navigate(portalSlug ? `/${portalSlug}/tournament/${tournamentId}/edit` : `/tournament/${tournamentId}/edit`)}>
-                <Settings className="w-3.5 h-3.5 mr-1.5" />
-                Editar Torneio
-              </Button>
-              <Button size="sm" variant="destructive" onClick={() => window.confirm("Excluir torneio?") && deleteTournament.mutate({ id: tournamentId })}><Trash2 className="w-3.5 h-3.5" /></Button>
-            </div>
-          )}
+
+          <nav className="hidden md:flex items-center gap-6">
+            <Button variant="ghost" className="text-sm font-bold text-gray-600 hover:text-gray-900 border-none px-0" onClick={() => navigate(`/${portalSlug}#competicoes`)}>
+               Modalidades
+            </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="text-sm font-bold text-gray-600 hover:text-gray-900 border-none">
+                  Regulamentos <ChevronDown className="ml-1 w-3.5 h-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64 rounded-xl shadow-xl border-gray-100">
+                <DropdownMenuItem 
+                  className="flex items-center gap-2 py-3 cursor-pointer text-xs font-bold uppercase text-primary"
+                  onClick={() => portal?.generalRegulation && downloadPDF(portal.generalRegulation, `regulamento_geral_${portal.slug}.pdf`)}
+                  disabled={!portal?.generalRegulation}
+                >
+                  <FileText className="w-4 h-4" />
+                  Regulamento Geral
+                  {!portal?.generalRegulation && <span className="ml-auto text-[8px] opacity-40">(EM BREVE)</span>}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <div className="px-2 py-2 text-[10px] font-bold text-muted-foreground uppercase opacity-50">Desta Competição</div>
+                <DropdownMenuItem 
+                  className="flex items-center gap-2 py-3 cursor-pointer text-[10px] font-bold uppercase transition-colors hover:bg-gold/10"
+                  onClick={() => tournament?.regulation && downloadPDF(tournament.regulation, `regulamento_${tournament.name.toLowerCase().replace(/ /g, '_')}.pdf`)}
+                  disabled={!tournament?.regulation}
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  Regulamento da Categoria
+                  {!tournament?.regulation && <span className="ml-auto text-[8px] opacity-40">(NÃO DISPONÍVEL)</span>}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </nav>
+
+          <div className="flex items-center gap-3">
+            {isAdmin && (
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" className="border-gray-200 bg-white text-gray-700 hover:bg-gray-50" onClick={() => navigate(portalSlug ? `/${portalSlug}/tournament/${tournamentId}/edit` : `/tournament/${tournamentId}/edit`)}>
+                  <Settings className="w-3.5 h-3.5 mr-1.5" />
+                  Editar Torneio
+                </Button>
+                <Button size="sm" variant="destructive" onClick={() => window.confirm("Excluir torneio?") && deleteTournament.mutate({ id: tournamentId })}><Trash2 className="w-3.5 h-3.5" /></Button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -473,7 +527,7 @@ export default function TournamentDetail() {
           <section 
             className="relative overflow-hidden py-24 sm:py-32 rounded-3xl mb-10 border border-gray-100 shadow-premium"
             style={portal?.banner ? {
-              backgroundImage: `linear-gradient(to bottom, rgba(17, 24, 39, 0.7), rgba(17, 24, 39, 0.9)), url(${portal.banner})`,
+              backgroundImage: `linear-gradient(to bottom, rgba(17, 24, 39, ${ (portal.heroOverlayOpacity ?? 80) / 100 }), rgba(17, 24, 39, ${ Math.min((portal.heroOverlayOpacity ?? 80) + 10, 100) / 100 })), url(${portal.banner})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
             } : { backgroundColor: 'var(--primary)' }}
@@ -505,6 +559,27 @@ export default function TournamentDetail() {
             <div className="prose prose-gray max-w-none text-gray-600 leading-relaxed whitespace-pre-wrap">
               {tournament.description}
             </div>
+          </section>
+        )}
+
+        {tournament.regulation && (
+          <section className="mb-10 p-6 bg-gold/5 border border-gold/20 rounded-3xl flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-gold/10 flex items-center justify-center text-gold">
+                <FileText className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-display font-bold text-gray-900">Regulamento Oficial</h3>
+                <p className="text-xs text-gray-500">Documento PDF disponível para download</p>
+              </div>
+            </div>
+            <Button 
+              className="gradient-gold text-amber-950 font-bold px-6 h-12 rounded-xl"
+              onClick={() => tournament.regulation && downloadPDF(tournament.regulation, `regulamento_${tournament.name.toLowerCase()}.pdf`)}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Baixar PDF
+            </Button>
           </section>
         )}
 

@@ -315,6 +315,9 @@ function PortalSettings({ portal }: { portal: any }) {
   const [heroTitle, setHeroTitle] = useState(portal.heroTitle || "");
   const [heroSubtitle, setHeroSubtitle] = useState(portal.heroSubtitle || "");
   const [aboutText, setAboutText] = useState(portal.aboutText || "");
+  const [heroBadge, setHeroBadge] = useState(portal.heroBadgeLabel || "Portal Oficial de Torneios");
+  const [heroOpacity, setHeroOpacity] = useState(portal.heroOverlayOpacity ?? 80);
+  const [genReg, setGenReg] = useState(portal.generalRegulation);
 
   const updateMutation = trpc.portal.update.useMutation({
     onSuccess: () => toast.success("Configurações salvas!"),
@@ -333,6 +336,9 @@ function PortalSettings({ portal }: { portal: any }) {
       heroTitle: heroTitle || null,
       heroSubtitle: heroSubtitle || null,
       aboutText: aboutText || null,
+      heroBadgeLabel: heroBadge,
+      heroOverlayOpacity: Number(heroOpacity),
+      generalRegulation: genReg || null,
     });
   };
 
@@ -425,6 +431,56 @@ function PortalSettings({ portal }: { portal: any }) {
            <div className="p-4 bg-secondary/10 rounded-2xl border border-border/40">
               <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-3 text-center">Cor Secundária (Destaque)</label>
               <input type="color" value={secondary} onChange={e => setSecondary(e.target.value)} className="w-full h-10 rounded-lg cursor-pointer bg-transparent border-none" />
+           </div>
+        </div>
+
+        <div className="space-y-6 pt-6 border-t border-border/30">
+           <h3 className="text-xs font-bold text-gold uppercase tracking-widest">Ajustes Finos do Herói</h3>
+           <div className="grid gap-6 sm:grid-cols-2">
+              <div>
+                 <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-2">Texto do Badge (Selo)</label>
+                 <input 
+                   type="text" 
+                   value={heroBadge} 
+                   onChange={e => setHeroBadge(e.target.value)}
+                   className="w-full px-4 py-3 bg-secondary/20 border border-border/60 rounded-xl text-foreground"
+                 />
+              </div>
+              <div>
+                 <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-2">Opacidade do Fundo ({heroOpacity}%)</label>
+                 <input 
+                   type="range" 
+                   min="0" 
+                   max="100" 
+                   value={heroOpacity} 
+                   onChange={e => setHeroOpacity(parseInt(e.target.value))}
+                   className="w-full h-10 cursor-pointer accent-gold"
+                 />
+              </div>
+           </div>
+        </div>
+
+        <div className="space-y-4 pt-6 border-t border-border/30">
+           <label className="block text-[10px] font-bold text-muted-foreground uppercase">Regulamento Geral (PDF)</label>
+           <div className="flex items-center gap-4">
+              <label className="flex-1 cursor-pointer flex items-center justify-center h-14 rounded-2xl border-2 border-dashed border-border/60 hover:border-gold/50 transition-all bg-secondary/10">
+                 <input type="file" accept="application/pdf" className="hidden" onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                       if (file.size > 5 * 1024 * 1024) return toast.error("O PDF deve ter menos de 5MB");
+                       const reader = new FileReader();
+                       reader.onloadend = () => setGenReg(reader.result as string);
+                       reader.readAsDataURL(file);
+                    }
+                 }} />
+                 <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase">
+                    <Plus className="w-4 h-4" />
+                    {genReg ? "SUBSTITUIR PDF GERAL" : "CARREGAR REGULAMENTO GERAL"}
+                  </div>
+              </label>
+              {genReg && (
+                 <Button variant="outline" size="sm" className="h-14 px-4 text-red-500 border-red-500/20 hover:bg-red-500/10" onClick={() => setGenReg(null)}>Remover</Button>
+              )}
            </div>
         </div>
 

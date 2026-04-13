@@ -39,6 +39,9 @@ export const portals = mysqlTable("portals", {
   heroTitle: varchar("heroTitle", { length: 255 }),
   heroSubtitle: text("heroSubtitle"),
   aboutText: longtext("aboutText"),
+  heroBadgeLabel: varchar("heroBadgeLabel", { length: 255 }).default("Portal Oficial de Torneios"),
+  heroOverlayOpacity: int("heroOverlayOpacity").default(80),
+  generalRegulation: longtext("generalRegulation"),
   adminPassword: varchar("adminPassword", { length: 255 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -71,6 +74,7 @@ export const tournaments = mysqlTable("tournaments", {
   secondaryColor: varchar("secondaryColor", { length: 7 }),
   fontFamily: varchar("fontFamily", { length: 100 }),
   description: longtext("description"),
+  regulation: longtext("regulation"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

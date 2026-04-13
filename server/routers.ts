@@ -234,6 +234,9 @@ const portalRouter = router({
         heroTitle: z.string().nullable().optional(),
         heroSubtitle: z.string().nullable().optional(),
         aboutText: z.string().nullable().optional(),
+        heroBadgeLabel: z.string().nullable().optional(),
+        heroOverlayOpacity: z.number().nullable().optional(),
+        generalRegulation: z.string().nullable().optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -300,6 +303,7 @@ const tournamentRouter = router({
         secondaryColor: z.string().nullable().optional(),
         fontFamily: z.string().nullable().optional(),
         description: z.string().nullable().optional(),
+        regulation: z.string().nullable().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -319,6 +323,7 @@ const tournamentRouter = router({
         secondaryColor: input.secondaryColor,
         fontFamily: input.fontFamily,
         description: input.description,
+        regulation: input.regulation || null,
       });
 
       // Insert teams with their assigned groups
@@ -347,6 +352,7 @@ const tournamentRouter = router({
         secondaryColor: z.string().nullable().optional(),
         fontFamily: z.string().nullable().optional(),
         description: z.string().nullable().optional(),
+        regulation: z.string().nullable().optional(),
         teams: z
           .array(
             z.object({

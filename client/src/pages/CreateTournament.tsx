@@ -55,6 +55,7 @@ export default function CreateTournament() {
   const [secondaryColor, setSecondaryColor] = useState("");
   const [fontFamily, setFontFamily] = useState("Inter");
   const [description, setDescription] = useState("");
+  const [regulation, setRegulation] = useState<string | null>(null);
 
   // Portal Context
   const { data: portal } = trpc.portal.getBySlug.useQuery(
@@ -138,6 +139,7 @@ export default function CreateTournament() {
       secondaryColor,
       fontFamily,
       description: description || null,
+      regulation: regulation || null,
       teams
     });
   };
@@ -441,6 +443,32 @@ export default function CreateTournament() {
               </div>
             </div>
             <p className="text-[10px] text-muted-foreground mt-4">Estas configurações irão se sobrepor às cores padrão da Liga para a página deste torneio específico.</p>
+          </div>
+
+          <div className="bg-card border border-border/50 rounded-2xl p-6 shadow-premium">
+            <h2 className="font-display font-bold text-foreground mb-6 flex items-center gap-2">
+              <Shield className="w-5 h-5 text-gold" /> Regulamento da Categoria (PDF)
+            </h2>
+            <div className="flex items-center gap-4">
+               <label className="flex-1 cursor-pointer flex items-center justify-center h-14 rounded-2xl border-2 border-dashed border-border/60 hover:border-gold/50 transition-all bg-secondary/5">
+                  <input type="file" accept="application/pdf" className="hidden" onChange={(e) => {
+                     const file = e.target.files?.[0];
+                     if (file) {
+                        if (file.size > 5 * 1024 * 1024) return toast.error("O PDF deve ter menos de 5MB");
+                        const reader = new FileReader();
+                        reader.onloadend = () => setRegulation(reader.result as string);
+                        reader.readAsDataURL(file);
+                     }
+                  }} />
+                  <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase">
+                     <Plus className="w-4 h-4" />
+                     {regulation ? "SUBSTITUIR REGULAMENTO" : "CARREGAR REGULAMENTO (PDF)"}
+                  </div>
+               </label>
+               {regulation && (
+                  <Button variant="outline" size="sm" className="h-14 px-4 text-red-500 border-red-500/20 hover:bg-red-500/10" onClick={() => setRegulation(null)}>Remover</Button>
+               )}
+            </div>
           </div>
 
           {/* Teams */}
