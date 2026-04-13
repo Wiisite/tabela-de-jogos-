@@ -293,6 +293,9 @@ const tournamentRouter = router({
           .min(2),
         slider: z.string().nullable().optional(),
         sponsors: z.string().nullable().optional(),
+        primaryColor: z.string().nullable().optional(),
+        secondaryColor: z.string().nullable().optional(),
+        fontFamily: z.string().nullable().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -308,6 +311,9 @@ const tournamentRouter = router({
         isDoubleRound: input.isDoubleRound,
         slider: input.slider,
         sponsors: input.sponsors,
+        primaryColor: input.primaryColor,
+        secondaryColor: input.secondaryColor,
+        fontFamily: input.fontFamily,
       });
 
       // Insert teams with their assigned groups
@@ -332,6 +338,9 @@ const tournamentRouter = router({
         champion: z.string().nullable().optional(),
         slider: z.string().nullable().optional(),
         sponsors: z.string().nullable().optional(),
+        primaryColor: z.string().nullable().optional(),
+        secondaryColor: z.string().nullable().optional(),
+        fontFamily: z.string().nullable().optional(),
         teams: z
           .array(
             z.object({

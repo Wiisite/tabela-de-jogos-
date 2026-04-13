@@ -158,6 +158,9 @@ export async function createTournament(
     sport?: "football" | "basketball" | "volleyball" | "handball" | "futsal";
     slider?: string | null;
     sponsors?: string | null;
+    primaryColor?: string | null;
+    secondaryColor?: string | null;
+    fontFamily?: string | null;
   } = {}
 ) {
   const db = await getDb();
@@ -175,6 +178,9 @@ export async function createTournament(
     isDoubleRound: config.isDoubleRound ? 1 : 0,
     slider: config.slider ?? null,
     sponsors: config.sponsors ?? null,
+    primaryColor: config.primaryColor ?? null,
+    secondaryColor: config.secondaryColor ?? null,
+    fontFamily: config.fontFamily ?? null,
   });
   return result[0].insertId;
 }
@@ -206,6 +212,9 @@ export async function updateTournament(
     champion?: string | null;
     slider?: string | null;
     sponsors?: string | null;
+    primaryColor?: string | null;
+    secondaryColor?: string | null;
+    fontFamily?: string | null;
   }
 ) {
   const db = await getDb();

@@ -45,6 +45,9 @@ export default function EditTournament() {
   const [regenerateMatches, setRegenerateMatches] = useState(false);
   const [slider, setSlider] = useState<string[]>([]);
   const [sponsors, setSponsors] = useState<{ name: string; logo: string }[]>([]);
+  const [primaryColor, setPrimaryColor] = useState("");
+  const [secondaryColor, setSecondaryColor] = useState("");
+  const [fontFamily, setFontFamily] = useState("Inter");
 
   const { data: source, isLoading: dataLoading } = trpc.tournament.getById.useQuery({ id: tournamentId });
   const { data: portal } = trpc.portal.getBySlug.useQuery({ slug: portalSlug ?? "" }, { enabled: !!portalSlug });
@@ -62,6 +65,9 @@ export default function EditTournament() {
       setIsDoubleRound(t.isDoubleRound === 1);
       setSlider(t.slider ? JSON.parse(t.slider) : []);
       setSponsors(t.sponsors ? JSON.parse(t.sponsors) : []);
+      setPrimaryColor(t.primaryColor || portal?.primaryColor || "#1e3a8a");
+      setSecondaryColor(t.secondaryColor || portal?.secondaryColor || "#f59e0b");
+      setFontFamily(t.fontFamily || portal?.fontFamily || "Inter");
       setTeams(source.teams.map(team => ({
         id: team.id,
         name: team.name,
@@ -71,7 +77,7 @@ export default function EditTournament() {
         groupName: team.groupName
       })));
     }
-  }, [source]);
+  }, [source, portal]);
 
   const updateMutation = trpc.tournament.update.useMutation({
     onSuccess: () => {
@@ -130,6 +136,9 @@ export default function EditTournament() {
       isDoubleRound,
       slider: JSON.stringify(slider),
       sponsors: JSON.stringify(sponsors),
+      primaryColor,
+      secondaryColor,
+      fontFamily,
       teams
     });
   };
@@ -222,6 +231,39 @@ export default function EditTournament() {
                 </div>
               </div>
             </div>
+          </div>
+
+          <div className="bg-card border border-border/50 rounded-2xl p-6 shadow-premium">
+            <h2 className="font-display font-semibold text-foreground mb-5 flex items-center gap-2">
+              <Trophy className="w-4 h-4 text-gold" /> Identidade Visual do Torneio
+            </h2>
+            <div className="grid gap-6 sm:grid-cols-3">
+              <div>
+                <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">Cor Primária</label>
+                <div className="flex items-center gap-3">
+                  <input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="w-12 h-12 rounded cursor-pointer border border-border/60 bg-transparent p-1" />
+                  <input type="text" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="w-full px-3 py-2 bg-secondary/20 border border-border/60 rounded-xl text-foreground text-sm uppercase" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">Cor Secundária</label>
+                <div className="flex items-center gap-3">
+                  <input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="w-12 h-12 rounded cursor-pointer border border-border/60 bg-transparent p-1" />
+                  <input type="text" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="w-full px-3 py-2 bg-secondary/20 border border-border/60 rounded-xl text-foreground text-sm uppercase" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">Fonte (Opcional)</label>
+                <select value={fontFamily} onChange={(e) => setFontFamily(e.target.value)} className="w-full px-4 py-3 bg-secondary/20 border border-border/60 rounded-xl text-foreground focus:ring-1 focus:ring-gold/50 text-sm font-medium">
+                  <option value="Inter">Inter (Padrão)</option>
+                  <option value="Montserrat">Montserrat</option>
+                  <option value="Roboto">Roboto</option>
+                  <option value="Poppins">Poppins</option>
+                  <option value="Outfit">Outfit</option>
+                </select>
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-4">Estas configurações irão se sobrepor às cores do Portal.</p>
           </div>
 
           <div className="bg-card border border-border/50 rounded-2xl p-6 shadow-premium">

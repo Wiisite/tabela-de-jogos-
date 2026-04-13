@@ -15,6 +15,13 @@
       "when": 1776085130463,
       "tag": "0001_brave_stick",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1776119039445,
+      "tag": "0002_kind_wong",
+      "breakpoints": true
     }
   ]
 }

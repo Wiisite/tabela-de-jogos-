@@ -358,12 +358,14 @@ export default function TournamentDetail() {
   const sponsorsList: { name: string; logo: string }[] = tournament?.sponsors ? JSON.parse(tournament.sponsors) : [];
 
   useEffect(() => {
-    if (portal) {
-      document.documentElement.style.setProperty('--primary', portal.primaryColor);
-      document.documentElement.style.setProperty('--gold', portal.secondaryColor);
-      document.documentElement.style.fontFamily = portal.fontFamily || "Inter";
-    }
-  }, [portal]);
+    const primary = tournament?.primaryColor || portal?.primaryColor || "#1e3a8a";
+    const secondary = tournament?.secondaryColor || portal?.secondaryColor || "#f59e0b";
+    const font = tournament?.fontFamily || portal?.fontFamily || "Inter";
+
+    document.documentElement.style.setProperty('--primary', primary);
+    document.documentElement.style.setProperty('--gold', secondary);
+    document.documentElement.style.fontFamily = font;
+  }, [portal, tournament]);
 
   useEffect(() => {
     if (sliderImgs.length > 1) {

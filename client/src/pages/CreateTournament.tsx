@@ -51,12 +51,23 @@ export default function CreateTournament() {
   const [isDoubleRound, setIsDoubleRound] = useState<boolean>(false);
   const [slider, setSlider] = useState<string[]>([]);
   const [sponsors, setSponsors] = useState<{ name: string; logo: string }[]>([]);
+  const [primaryColor, setPrimaryColor] = useState("");
+  const [secondaryColor, setSecondaryColor] = useState("");
+  const [fontFamily, setFontFamily] = useState("Inter");
 
   // Portal Context
   const { data: portal } = trpc.portal.getBySlug.useQuery(
     { slug: portalSlug ?? "" },
     { enabled: !!portalSlug }
   );
+
+  useEffect(() => {
+    if (portal) {
+      if (!primaryColor) setPrimaryColor(portal.primaryColor);
+      if (!secondaryColor) setSecondaryColor(portal.secondaryColor);
+      if (fontFamily === "Inter" && portal.fontFamily) setFontFamily(portal.fontFamily);
+    }
+  }, [portal]);
 
   const handleSportChange = (s: Sport) => {
     setSport(s);
@@ -122,6 +133,9 @@ export default function CreateTournament() {
       isDoubleRound,
       slider: JSON.stringify(slider),
       sponsors: JSON.stringify(sponsors),
+      primaryColor,
+      secondaryColor,
+      fontFamily,
       teams
     });
   };
@@ -380,6 +394,39 @@ export default function CreateTournament() {
                    </div>
                 )}
              </div>
+          </div>
+
+          <div className="bg-card border border-border/50 rounded-2xl p-6 shadow-premium">
+            <h2 className="font-display font-semibold text-foreground mb-5 flex items-center gap-2">
+              <Trophy className="w-4 h-4 text-gold" /> Identidade Visual do Torneio
+            </h2>
+            <div className="grid gap-6 sm:grid-cols-3">
+              <div>
+                <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">Cor Primária</label>
+                <div className="flex items-center gap-3">
+                  <input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="w-12 h-12 rounded cursor-pointer border border-border/60 bg-transparent p-1" />
+                  <input type="text" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="w-full px-3 py-2 bg-secondary/20 border border-border/60 rounded-xl text-foreground text-sm uppercase" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">Cor Secundária</label>
+                <div className="flex items-center gap-3">
+                  <input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="w-12 h-12 rounded cursor-pointer border border-border/60 bg-transparent p-1" />
+                  <input type="text" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="w-full px-3 py-2 bg-secondary/20 border border-border/60 rounded-xl text-foreground text-sm uppercase" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">Fonte (Opcional)</label>
+                <select value={fontFamily} onChange={(e) => setFontFamily(e.target.value)} className="w-full px-4 py-3 bg-secondary/20 border border-border/60 rounded-xl text-foreground focus:ring-1 focus:ring-gold/50 text-sm font-medium">
+                  <option value="Inter">Inter (Padrão)</option>
+                  <option value="Montserrat">Montserrat</option>
+                  <option value="Roboto">Roboto</option>
+                  <option value="Poppins">Poppins</option>
+                  <option value="Outfit">Outfit</option>
+                </select>
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-4">Estas configurações irão se sobrepor às cores padrão da Liga para a página deste torneio específico.</p>
           </div>
 
           {/* Teams */}
