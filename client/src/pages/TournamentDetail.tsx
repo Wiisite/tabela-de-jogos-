@@ -348,6 +348,15 @@ export default function TournamentDetail() {
   const { data: bracket, refetch: refetchBracket } = trpc.tournament.getBracket.useQuery({ tournamentId });
   const utils = trpc.useUtils();
 
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const tournament = data?.tournament;
+  const teams = data?.teams || [];
+  const matches = data?.matches || [];
+
+  const sliderImgs: string[] = tournament?.slider ? JSON.parse(tournament.slider) : [];
+  const sponsorsList: { name: string; logo: string }[] = tournament?.sponsors ? JSON.parse(tournament.sponsors) : [];
+
   useEffect(() => {
     if (portal) {
       document.documentElement.style.setProperty('--primary', portal.primaryColor);
@@ -355,6 +364,15 @@ export default function TournamentDetail() {
       document.documentElement.style.fontFamily = portal.fontFamily || "Inter";
     }
   }, [portal]);
+
+  useEffect(() => {
+    if (sliderImgs.length > 1) {
+      const timer = setInterval(() => {
+        setCurrentSlide(prev => (prev + 1) % sliderImgs.length);
+      }, 5000);
+      return () => clearInterval(timer);
+    }
+  }, [sliderImgs.length]); // Use length to avoid infinite loops if array is re-parsed
 
   const updateScore = trpc.match.updateScore.useMutation({
     onSuccess: () => { refetch(); refetchBracket(); utils.tournament.getStandings.invalidate({ tournamentId }); setEditingMatch(null); toast.success("Placar atualizado!"); },
@@ -372,22 +390,8 @@ export default function TournamentDetail() {
 
   if (!data) return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 rounded-full border-2 border-gold border-t-transparent animate-spin" /></div>;
 
-  const { tournament, teams, matches } = data;
   const isAdmin = isAuthenticated;
-  const sportCfg = SPORT_CONFIG[tournament.sport as Sport] ?? SPORT_CONFIG.football;
-
-  const sliderImgs: string[] = tournament.slider ? JSON.parse(tournament.slider) : [];
-  const sponsorsList: { name: string; logo: string }[] = tournament.sponsors ? JSON.parse(tournament.sponsors) : [];
-  const [currentSlide, setCurrentSlide] = useState(0);
-
-  useEffect(() => {
-    if (sliderImgs.length > 1) {
-      const timer = setInterval(() => {
-        setCurrentSlide(prev => (prev + 1) % sliderImgs.length);
-      }, 5000);
-      return () => clearInterval(timer);
-    }
-  }, [sliderImgs]);
+  const sportCfg = SPORT_CONFIG[tournament!.sport as Sport] ?? SPORT_CONFIG.football;
 
   const exportStandingsPDF = () => {
     if (!standingsMap) return;
