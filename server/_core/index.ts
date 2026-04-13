@@ -111,7 +111,8 @@ async function startServer() {
   }
 
   const preferredPort = parseInt(process.env.PORT || "3000");
-  const port = await findAvailablePort(preferredPort);
+  const hasPlatformPort = typeof process.env.PORT === "string" && process.env.PORT.length > 0;
+  const port = hasPlatformPort ? preferredPort : await findAvailablePort(preferredPort);
 
   if (port !== preferredPort) {
     console.log(`Port ${preferredPort} is busy, using port ${port} instead`);

@@ -29,5 +29,5 @@ WORKDIR /usr/src/app
 EXPOSE 3000
 
 ENV NODE_ENV=production
-# Run db:deploy before starting the server to ensure DB is up to date
-CMD ["sh", "-c", "pnpm db:deploy && pnpm start"]
+# Run db:deploy before starting the server only when DATABASE_URL is provided
+CMD ["sh", "-c", "if [ -n \"$DATABASE_URL\" ]; then pnpm db:deploy; else echo 'DATABASE_URL not set; skipping db:deploy'; fi && pnpm start"]
