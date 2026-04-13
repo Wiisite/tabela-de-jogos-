@@ -291,6 +291,8 @@ const tournamentRouter = router({
             })
           )
           .min(2),
+        slider: z.string().nullable().optional(),
+        sponsors: z.string().nullable().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -304,6 +306,8 @@ const tournamentRouter = router({
         drawPoints: input.drawPoints,
         lossPoints: input.lossPoints,
         isDoubleRound: input.isDoubleRound,
+        slider: input.slider,
+        sponsors: input.sponsors,
       });
 
       // Insert teams with their assigned groups

@@ -156,6 +156,8 @@ export async function createTournament(
     lossPoints?: number;
     isDoubleRound?: boolean;
     sport?: "football" | "basketball" | "volleyball" | "handball" | "futsal";
+    slider?: string | null;
+    sponsors?: string | null;
   } = {}
 ) {
   const db = await getDb();
@@ -171,6 +173,8 @@ export async function createTournament(
     drawPoints: config.drawPoints ?? 1,
     lossPoints: config.lossPoints ?? 0,
     isDoubleRound: config.isDoubleRound ? 1 : 0,
+    slider: config.slider ?? null,
+    sponsors: config.sponsors ?? null,
   });
   return result[0].insertId;
 }

@@ -388,10 +388,10 @@ export default function TournamentDetail() {
   const generateFinal = trpc.tournament.generateFinal.useMutation({ onSuccess: () => { refetch(); refetchBracket(); setActiveTab("bracket"); toast.success("Finais geradas!"); } });
   const deleteTournament = trpc.tournament.delete.useMutation({ onSuccess: () => { toast.success("Torneio excluído."); navigate(portalSlug ? `/${portalSlug}/admin` : "/admin"); } });
 
-  if (!data) return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 rounded-full border-2 border-gold border-t-transparent animate-spin" /></div>;
+  if (!data || !tournament) return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 rounded-full border-2 border-gold border-t-transparent animate-spin" /></div>;
 
   const isAdmin = isAuthenticated;
-  const sportCfg = SPORT_CONFIG[tournament!.sport as Sport] ?? SPORT_CONFIG.football;
+  const sportCfg = SPORT_CONFIG[tournament.sport as Sport] ?? SPORT_CONFIG.football;
 
   const exportStandingsPDF = () => {
     if (!standingsMap) return;

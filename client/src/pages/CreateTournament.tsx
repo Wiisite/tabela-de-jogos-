@@ -49,6 +49,8 @@ export default function CreateTournament() {
   const [drawPoints, setDrawPoints] = useState<number>(1);
   const [lossPoints, setLossPoints] = useState<number>(0);
   const [isDoubleRound, setIsDoubleRound] = useState<boolean>(false);
+  const [slider, setSlider] = useState<string[]>([]);
+  const [sponsors, setSponsors] = useState<{ name: string; logo: string }[]>([]);
 
   // Portal Context
   const { data: portal } = trpc.portal.getBySlug.useQuery(
@@ -118,6 +120,8 @@ export default function CreateTournament() {
       drawPoints,
       lossPoints,
       isDoubleRound,
+      slider: JSON.stringify(slider),
+      sponsors: JSON.stringify(sponsors),
       teams
     });
   };
@@ -306,6 +310,76 @@ export default function CreateTournament() {
                 </div>
               </div>
             </div>
+          </div>
+
+          <div className="bg-card border border-border/50 rounded-2xl p-6 shadow-premium">
+             <h2 className="font-display font-bold text-foreground mb-6 flex items-center gap-2">
+                <ImageIcon className="w-5 h-5 text-gold" /> Galeria & Slider (Página Inicial)
+             </h2>
+             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                {slider.map((img, i) => (
+                   <div key={i} className="relative group aspect-video rounded-xl overflow-hidden border border-border/50 bg-secondary/20">
+                      <img src={img} className="w-full h-full object-cover" />
+                      <button type="button" onClick={() => setSlider(slider.filter((_, idx) => idx !== i))} className="absolute top-1 right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                         <Trash2 className="w-3 h-3 text-white" />
+                      </button>
+                   </div>
+                ))}
+                {slider.length < 5 && (
+                   <label className="aspect-video rounded-xl border-2 border-dashed border-border/60 hover:border-gold/50 flex flex-col items-center justify-center cursor-pointer transition-all bg-secondary/5">
+                      <input type="file" className="hidden" multiple onChange={(e) => {
+                         const files = Array.from(e.target.files || []);
+                         files.forEach(file => {
+                            if (file.size <= 2*1024*1024) {
+                               const reader = new FileReader();
+                               reader.onloadend = () => setSlider(prev => [...prev, reader.result as string].slice(0, 5));
+                               reader.readAsDataURL(file);
+                            } else {
+                               toast.error(`A imagem ${file.name} excede o limite de 2MB`);
+                            }
+                         });
+                      }} />
+                      <Plus className="w-6 h-6 text-muted-foreground mb-1" />
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase">Adicionar Foto</span>
+                   </label>
+                )}
+             </div>
+             <p className="text-[10px] text-muted-foreground">Recomendado: 1200x600px. Máximo 5 fotos. Elas aparecerão no topo da página do torneio.</p>
+          </div>
+
+          <div className="bg-card border border-border/50 rounded-2xl p-6 shadow-premium">
+             <div className="flex items-center justify-between mb-6">
+                <h2 className="font-display font-bold text-foreground flex items-center gap-2">
+                   <Users className="w-5 h-5 text-gold" /> Parceiros & Patrocinadores
+                </h2>
+                <Button type="button" size="sm" variant="outline" className="text-[10px] font-bold" onClick={() => setSponsors([...sponsors, { name: "", logo: "" }])}>
+                   <Plus className="w-3.5 h-3.5 mr-1" /> Adicionar
+                </Button>
+             </div>
+             <div className="grid gap-3 sm:grid-cols-2">
+                {sponsors.map((s, i) => (
+                   <div key={i} className="flex items-center gap-3 p-3 bg-secondary/10 rounded-xl border border-border/30">
+                      <label className="cursor-pointer w-10 h-10 rounded-lg border border-border/60 hover:border-gold relative overflow-hidden group bg-background/50 shrink-0">
+                         <input type="file" className="hidden" onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                               const reader = new FileReader();
+                               reader.onloadend = () => setSponsors(sponsors.map((item, idx) => idx === i ? { ...item, logo: reader.result as string } : item));
+                               reader.readAsDataURL(file);
+                            }
+                         }} />
+                         {s.logo ? <img src={s.logo} className="w-full h-full object-contain" /> : <Plus className="w-4 h-4 text-muted-foreground m-auto" />}
+                      </label>
+                      <input type="text" value={s.name} onChange={e => setSponsors(sponsors.map((item, idx) => idx === i ? { ...item, name: e.target.value } : item))} placeholder="Nome do Parceiro" className="flex-1 px-2 py-1.5 bg-background border border-border/50 rounded text-xs" />
+                      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive" onClick={() => setSponsors(sponsors.filter((_, idx) => idx !== i))}><Trash2 className="w-4 h-4" /></Button>
+                   </div>
+                ))}
+                {sponsors.length === 0 && (
+                   <div className="col-span-2 text-center py-4 text-muted-foreground text-xs border border-dashed border-border/40 rounded-xl">
+                      Nenhum patrocinador adicionado ainda. (Opcional)
+                   </div>
+                )}
+             </div>
           </div>
 
           {/* Teams */}
