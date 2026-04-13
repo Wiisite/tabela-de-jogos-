@@ -89,10 +89,6 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: "Inter", sans-serif;
-  }
-  h1, h2, h3 {
-    font-family: "Playfair Display", serif;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
@@ -150,7 +146,7 @@
   }
 
   .font-display {
-    font-family: "Playfair Display", serif;
+    /* removed forced override to allow dynamic fontFamily */
   }
 
   .text-gold {
