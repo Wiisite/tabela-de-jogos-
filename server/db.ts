@@ -156,6 +156,11 @@ export async function createTournament(
     lossPoints?: number;
     isDoubleRound?: boolean;
     sport?: "football" | "basketball" | "volleyball" | "handball" | "futsal";
+    slider?: string | null;
+    sponsors?: string | null;
+    primaryColor?: string | null;
+    secondaryColor?: string | null;
+    fontFamily?: string | null;
     heroTitleColor?: string | null;
     heroSubtitleColor?: string | null;
     heroSlider?: string | null;
@@ -215,6 +220,11 @@ export async function updateTournament(
     lossPoints?: number;
     isDoubleRound?: boolean;
     champion?: string | null;
+    slider?: string | null;
+    sponsors?: string | null;
+    primaryColor?: string | null;
+    secondaryColor?: string | null;
+    fontFamily?: string | null;
     slider?: string | null;
     sponsors?: string | null;
     primaryColor?: string | null;
