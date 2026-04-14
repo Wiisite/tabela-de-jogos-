@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import { trpc } from "../lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "../components/ui/button";
 import { 
   ArrowLeft, 
@@ -55,8 +56,8 @@ export default function TournamentDetail() {
   const { id, portalSlug } = useParams<{ id: string; portalSlug?: string }>();
   const tournamentId = parseInt(id ?? "0");
   const [, navigate] = useLocation();
-  const { data: user } = trpc.auth.getUser.useQuery();
-  const isAuthenticated = !!user;
+  const { user } = useAuth();
+  const isAdmin = !!user;
   
   const [activeTab, setActiveTab] = useState<Tab>("groups");
   const [editingMatch, setEditingMatch] = useState<null | any>(null);
