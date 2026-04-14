@@ -317,7 +317,11 @@ function PortalSettings({ portal }: { portal: any }) {
   const [aboutText, setAboutText] = useState(portal.aboutText || "");
   const [heroBadge, setHeroBadge] = useState(portal.heroBadgeLabel || "Portal Oficial de Torneios");
   const [heroOpacity, setHeroOpacity] = useState(portal.heroOverlayOpacity ?? 80);
+  const [heroTitleColor, setHeroTitleColor] = useState(portal.heroTitleColor || "#ffffff");
+  const [heroSubtitleColor, setHeroSubtitleColor] = useState(portal.heroSubtitleColor || "#ffffff");
+  const [heroBadgeColor, setHeroBadgeColor] = useState(portal.heroBadgeColor || "#ffffff");
   const [genReg, setGenReg] = useState(portal.generalRegulation);
+  const [sponsors, setSponsors] = useState<string[]>(portal.sponsors ? JSON.parse(portal.sponsors) : []);
 
   const updateMutation = trpc.portal.update.useMutation({
     onSuccess: () => toast.success("Configurações salvas!"),
@@ -338,7 +342,11 @@ function PortalSettings({ portal }: { portal: any }) {
       aboutText: aboutText || null,
       heroBadgeLabel: heroBadge,
       heroOverlayOpacity: Number(heroOpacity),
+      heroTitleColor,
+      heroSubtitleColor,
+      heroBadgeColor,
       generalRegulation: genReg || null,
+      sponsors: JSON.stringify(sponsors),
     });
   };
 
@@ -446,19 +454,62 @@ function PortalSettings({ portal }: { portal: any }) {
                    className="w-full px-4 py-3 bg-secondary/20 border border-border/60 rounded-xl text-foreground"
                  />
               </div>
-              <div>
-                 <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-2">Opacidade do Fundo ({heroOpacity}%)</label>
-                 <input 
-                   type="range" 
-                   min="0" 
-                   max="100" 
-                   value={heroOpacity} 
-                   onChange={e => setHeroOpacity(parseInt(e.target.value))}
-                   className="w-full h-10 cursor-pointer accent-gold"
-                 />
-              </div>
-           </div>
-        </div>
+               <div>
+                  <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-2">Opacidade do Fundo ({heroOpacity}%)</label>
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="100" 
+                    value={heroOpacity} 
+                    onChange={e => setHeroOpacity(parseInt(e.target.value))}
+                    className="w-full h-10 cursor-pointer accent-gold"
+                  />
+               </div>
+            </div>
+            
+            <div className="grid gap-4 sm:grid-cols-3">
+               <div className="p-3 bg-secondary/5 rounded-xl border border-border/40">
+                  <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-2 text-center">Cor Título</label>
+                  <input type="color" value={heroTitleColor} onChange={e => setHeroTitleColor(e.target.value)} className="w-full h-8 rounded cursor-pointer bg-transparent border-none" />
+               </div>
+               <div className="p-3 bg-secondary/5 rounded-xl border border-border/40">
+                  <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-2 text-center">Cor Subtítulo</label>
+                  <input type="color" value={heroSubtitleColor} onChange={e => setHeroSubtitleColor(e.target.value)} className="w-full h-8 rounded cursor-pointer bg-transparent border-none" />
+               </div>
+               <div className="p-3 bg-secondary/5 rounded-xl border border-border/40">
+                  <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-2 text-center">Cor Selo</label>
+                  <input type="color" value={heroBadgeColor} onChange={e => setHeroBadgeColor(e.target.value)} className="w-full h-8 rounded cursor-pointer bg-transparent border-none" />
+               </div>
+            </div>
+         </div>
+
+         <div className="space-y-6 pt-6 border-t border-border/30">
+            <h3 className="text-xs font-bold text-gold uppercase tracking-widest">Patrocinadores & Parceiros (Grid)</h3>
+            <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
+               {sponsors.map((src, idx) => (
+                  <div key={idx} className="aspect-square rounded-xl border border-border/40 overflow-hidden relative group bg-white p-2">
+                     <img src={src} className="w-full h-full object-contain" />
+                     <button 
+                        className="absolute inset-0 bg-red-500/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => setSponsors(prev => prev.filter((_, i) => i !== idx))}
+                     >
+                        <Trash2 className="w-4 h-4 text-white" />
+                     </button>
+                  </div>
+               ))}
+               <label className="aspect-square rounded-xl border-2 border-dashed border-border/60 flex items-center justify-center cursor-pointer hover:border-gold transition-all">
+                  <input type="file" className="hidden" multiple onChange={(e) => {
+                     const files = Array.from(e.target.files || []);
+                     files.forEach(file => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => setSponsors(prev => [...prev, reader.result as string]);
+                        reader.readAsDataURL(file);
+                     });
+                  }} />
+                  <Plus className="w-4 h-4 text-muted-foreground" />
+               </label>
+            </div>
+         </div>
 
         <div className="space-y-4 pt-6 border-t border-border/30">
            <label className="block text-[10px] font-bold text-muted-foreground uppercase">Regulamento Geral (PDF)</label>

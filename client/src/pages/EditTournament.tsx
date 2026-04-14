@@ -43,8 +43,9 @@ export default function EditTournament() {
   const [isDoubleRound, setIsDoubleRound] = useState<boolean>(false);
   const [teams, setTeams] = useState<TeamInput[]>([]);
   const [regenerateMatches, setRegenerateMatches] = useState(false);
-  const [slider, setSlider] = useState<string[]>([]);
-  const [sponsors, setSponsors] = useState<{ name: string; logo: string }[]>([]);
+  const [heroSlider, setHeroSlider] = useState<string[]>([]);
+  const [heroTitleColor, setHeroTitleColor] = useState("");
+  const [heroSubtitleColor, setHeroSubtitleColor] = useState("");
   const [primaryColor, setPrimaryColor] = useState("");
   const [secondaryColor, setSecondaryColor] = useState("");
   const [fontFamily, setFontFamily] = useState("Inter");
@@ -72,6 +73,9 @@ export default function EditTournament() {
       setFontFamily(t.fontFamily || portal?.fontFamily || "Inter");
       setDescription(t.description || "");
       setRegulation(t.regulation);
+      setHeroTitleColor(t.heroTitleColor || "");
+      setHeroSubtitleColor(t.heroSubtitleColor || "");
+      setHeroSlider(t.heroSlider ? JSON.parse(t.heroSlider) : []);
       setTeams(source.teams.map(team => ({
         id: team.id,
         name: team.name,
@@ -145,6 +149,9 @@ export default function EditTournament() {
       fontFamily,
       description: description || null,
       regulation: regulation || null,
+      heroTitleColor: heroTitleColor || null,
+      heroSubtitleColor: heroSubtitleColor || null,
+      heroSlider: JSON.stringify(heroSlider),
       teams
     });
   };
@@ -310,25 +317,25 @@ export default function EditTournament() {
 
           <div className="bg-card border border-border/50 rounded-2xl p-6 shadow-premium">
              <h2 className="font-display font-bold text-foreground mb-6 flex items-center gap-2">
-                <ImageIcon className="w-5 h-5 text-gold" /> Galeria & Slider (Herói)
+                <ImageIcon className="w-5 h-5 text-gold" /> Galeria & Slider do Topo
              </h2>
              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-                {slider.map((img, i) => (
+                {heroSlider.map((img, i) => (
                    <div key={i} className="relative group aspect-video rounded-xl overflow-hidden border border-border/50 bg-secondary/20">
                       <img src={img} className="w-full h-full object-cover" />
-                      <button type="button" onClick={() => setSlider(slider.filter((_, idx) => idx !== i))} className="absolute top-1 right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button type="button" onClick={() => setHeroSlider(heroSlider.filter((_, idx) => idx !== i))} className="absolute top-1 right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                          <Trash2 className="w-3 h-3 text-white" />
                       </button>
                    </div>
                 ))}
-                {slider.length < 5 && (
+                {heroSlider.length < 10 && (
                    <label className="aspect-video rounded-xl border-2 border-dashed border-border/60 hover:border-gold/50 flex flex-col items-center justify-center cursor-pointer transition-all bg-secondary/5">
                       <input type="file" className="hidden" multiple onChange={(e) => {
                          const files = Array.from(e.target.files || []);
                          files.forEach(file => {
                             if (file.size <= 2*1024*1024) {
                                const reader = new FileReader();
-                               reader.onloadend = () => setSlider(prev => [...prev, reader.result as string].slice(0, 5));
+                               reader.onloadend = () => setHeroSlider(prev => [...prev, reader.result as string].slice(0, 10));
                                reader.readAsDataURL(file);
                             }
                          });
@@ -338,37 +345,24 @@ export default function EditTournament() {
                    </label>
                 )}
              </div>
-             <p className="text-[10px] text-muted-foreground">Recomendado: 1200x600px. Máximo 5 fotos.</p>
+             <p className="text-[10px] text-muted-foreground">Máximo 10 fotos para o carrossel do topo.</p>
           </div>
 
           <div className="bg-card border border-border/50 rounded-2xl p-6 shadow-premium">
-             <div className="flex items-center justify-between mb-6">
-                <h2 className="font-display font-bold text-foreground flex items-center gap-2">
-                   <Users className="w-5 h-5 text-gold" /> Parceiros & Patrocinadores
-                </h2>
-                <Button type="button" size="sm" variant="outline" className="text-[10px] font-bold" onClick={() => setSponsors([...sponsors, { name: "", logo: "" }])}>
-                   <Plus className="w-3.5 h-3.5 mr-1" /> Adicionar
-                </Button>
-             </div>
-             <div className="grid gap-3 sm:grid-cols-2">
-                {sponsors.map((s, i) => (
-                   <div key={i} className="flex items-center gap-3 p-3 bg-secondary/10 rounded-xl border border-border/30">
-                      <label className="cursor-pointer w-10 h-10 rounded-lg border border-border/60 hover:border-gold relative overflow-hidden group bg-background/50 shrink-0">
-                         <input type="file" className="hidden" onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                               const reader = new FileReader();
-                               reader.onloadend = () => setSponsors(sponsors.map((item, idx) => idx === i ? { ...item, logo: reader.result as string } : item));
-                               reader.readAsDataURL(file);
-                            }
-                         }} />
-                         {s.logo ? <img src={s.logo} className="w-full h-full object-contain" /> : <Plus className="w-4 h-4 text-muted-foreground m-auto" />}
-                      </label>
-                      <input type="text" value={s.name} onChange={e => setSponsors(sponsors.map((item, idx) => idx === i ? { ...item, name: e.target.value } : item))} placeholder="Nome do Parceiro" className="flex-1 px-2 py-1.5 bg-background border border-border/50 rounded text-xs" />
-                      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive" onClick={() => setSponsors(sponsors.filter((_, idx) => idx !== i))}><Trash2 className="w-4 h-4" /></Button>
-                   </div>
-                ))}
-             </div>
+            <h2 className="font-display font-bold text-foreground mb-6 flex items-center gap-2">
+              <Star className="w-5 h-5 text-gold" /> Cores Personalizadas (Opcional)
+            </h2>
+            <div className="grid gap-4 sm:grid-cols-2">
+               <div className="p-4 bg-secondary/5 rounded-2xl border border-border/40">
+                  <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-3 text-center">Cor do Título</label>
+                  <input type="color" value={heroTitleColor || "#ffffff"} onChange={e => setHeroTitleColor(e.target.value)} className="w-full h-10 rounded-xl cursor-pointer bg-transparent border-none shadow-sm" />
+               </div>
+               <div className="p-4 bg-secondary/5 rounded-2xl border border-border/40">
+                  <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-3 text-center">Cor do Subtítulo</label>
+                  <input type="color" value={heroSubtitleColor || "#ffffff"} onChange={e => setHeroSubtitleColor(e.target.value)} className="w-full h-10 rounded-xl cursor-pointer bg-transparent border-none shadow-sm" />
+               </div>
+            </div>
+            <p className="mt-4 text-[10px] text-muted-foreground italic text-center">* Deixe em branco para usar as cores padrão do portal.</p>
           </div>
 
           <div className="bg-card border border-border/50 rounded-2xl p-6 shadow-premium">

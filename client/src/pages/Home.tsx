@@ -280,16 +280,16 @@ export default function Home() {
         } : undefined}
       >
         <div className="container relative text-center z-10">
-          <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border ${portal?.banner ? 'border-white/20 bg-white/10 text-white/80 backdrop-blur-md' : 'border-gray-200 bg-gray-50 text-gray-500'} text-[10px] font-bold mb-6 tracking-widest uppercase animate-in fade-in slide-in-from-bottom-4 duration-1000`}>
+          <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border ${portal?.banner ? 'border-white/20 bg-white/10 backdrop-blur-md' : 'border-gray-200 bg-gray-50'} text-[10px] font-bold mb-6 tracking-widest uppercase animate-in fade-in slide-in-from-bottom-4 duration-1000`} style={{ color: portal?.heroBadgeColor || (portal?.banner ? "rgba(255,255,255,0.8)" : "#6b7280") }}>
             <Star className="w-3 h-3 fill-gold" />
             {portal?.heroBadgeLabel || "Portal Oficial de Torneios"}
           </div>
-          <h1 className={`font-display text-4xl sm:text-6xl font-bold mb-5 leading-tight ${portal?.banner ? 'text-white drop-shadow-md' : 'text-gray-900'}`}>
+          <h1 className={`font-display text-4xl sm:text-6xl font-bold mb-5 leading-tight ${portal?.banner ? 'drop-shadow-md' : ''}`} style={{ color: portal?.heroTitleColor || (portal?.banner ? "#ffffff" : "#111827") }}>
             {portal?.heroTitle || (
               <>Acompanhe a <span style={{ color: 'var(--primary)' }}>{portal?.name}</span></>
             )}
           </h1>
-          <p className={`text-lg max-w-xl mx-auto mb-8 leading-relaxed ${portal?.banner ? 'text-white/80 drop-shadow-sm' : 'text-gray-500'}`}>
+          <p className={`text-lg max-w-xl mx-auto mb-8 leading-relaxed ${portal?.banner ? 'drop-shadow-sm' : ''}`} style={{ color: portal?.heroSubtitleColor || (portal?.banner ? "rgba(255,255,255,0.8)" : "#6b7280") }}>
             {portal?.heroSubtitle || "Resultados em tempo real, tabelas de classificação e toda a emoção dos esportes escolares."}
           </p>
         </div>
@@ -412,7 +412,21 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="border-t border-gray-100 py-12 mt-12 bg-gray-50">
+      {/* Sponsors Grid */}
+      {portal?.sponsors && JSON.parse(portal.sponsors).length > 0 && (
+        <section className="py-16 bg-gray-50 border-t border-gray-100">
+           <div className="container">
+              <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-center mb-10">Parceiros & Patrocinadores</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-8 items-center justify-items-center opacity-70 grayscale hover:grayscale-0 transition-all duration-500">
+                 {JSON.parse(portal.sponsors).map((src: string, idx: number) => (
+                    <img key={idx} src={src} className="max-h-16 w-auto object-contain" alt="Patrocinador" />
+                 ))}
+              </div>
+           </div>
+        </section>
+      )}
+
+      <footer className="border-t border-gray-100 py-12 bg-white">
         <div className="container text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             {portal?.logo ? (
