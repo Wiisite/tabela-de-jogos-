@@ -341,19 +341,26 @@ export default function Home() {
           </div>
           
           <div className="flex gap-2 overflow-x-auto pb-4 mb-6 scrollbar-hide">
-            {["all", "football", "futsal", "basketball", "volleyball", "handball"].map((s) => (
-              <button
-                key={s}
-                onClick={() => setSelectedSport(s)}
-                className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest whitespace-nowrap transition-all border ${
-                  selectedSport === s
-                    ? "bg-gray-900 text-white border-gray-900 shadow-md"
-                    : "bg-white text-gray-500 border-gray-200 hover:border-gray-900 hover:text-gray-900"
-                }`}
-              >
-                {s === "all" ? "Todos" : SPORT_LABEL[s] || s}
-              </button>
-            ))}
+            {(() => {
+              const availableSports = tournaments 
+                ? ["all", ...new Set(tournaments.map(t => t.sport))] 
+                : ["all"];
+              
+              return availableSports.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setSelectedSport(s)}
+                  className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest whitespace-nowrap transition-all border ${
+                    selectedSport === s
+                      ? "text-white shadow-md"
+                      : "bg-white text-gray-500 border-gray-200 hover:text-[var(--primary)] hover:border-[var(--primary)]"
+                  }`}
+                  style={selectedSport === s ? { backgroundColor: 'var(--primary)', borderColor: 'var(--primary)' } : {}}
+                >
+                  {s === "all" ? "Todos" : SPORT_LABEL[s] || s}
+                </button>
+              ));
+            })()}
           </div>
 
           {!tournaments || tournaments.length === 0 ? (
@@ -417,9 +424,9 @@ export default function Home() {
         <section className="py-16 bg-gray-50 border-t border-gray-100">
            <div className="container">
               <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-center mb-10">Parceiros & Patrocinadores</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-8 items-center justify-items-center opacity-70 grayscale hover:grayscale-0 transition-all duration-500">
+              <div className="flex flex-wrap items-center justify-center gap-12 transition-all duration-500">
                  {JSON.parse(portal.sponsors).map((src: string, idx: number) => (
-                    <img key={idx} src={src} className="max-h-16 w-auto object-contain" alt="Patrocinador" />
+                    <img key={idx} src={src} className="max-h-16 w-auto object-contain hover:scale-105 transition-transform duration-300" alt="Patrocinador" />
                  ))}
               </div>
            </div>

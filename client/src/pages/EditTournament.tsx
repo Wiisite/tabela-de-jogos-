@@ -180,7 +180,12 @@ export default function EditTournament() {
               <ArrowLeft className="w-4 h-4 mr-1.5" /> Voltar
             </Button>
             <div className="w-px h-5 bg-border/60" />
-            <span className="font-medium text-sm text-foreground uppercase tracking-wider">Editar: {source?.tournament.name}</span>
+            <div className="flex items-center gap-2">
+              {portal?.logo && <img src={portal.logo} className="h-6 object-contain" />}
+              <span className="font-bold text-sm text-foreground uppercase tracking-wider">
+                {portal?.name} • Editar
+              </span>
+            </div>
           </div>
         </div>
       </header>

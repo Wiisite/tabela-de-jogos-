@@ -155,7 +155,18 @@ export default function TournamentDetail() {
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" onClick={() => navigate(portalSlug ? `/${portalSlug}` : "/")} className="text-gray-600 hover:text-gray-900 hover:bg-gray-100"><ArrowLeft className="w-4 h-4 mr-1.5" /> Voltar</Button>
             <div className="w-px h-5 bg-gray-200" />
-            {portal?.logo ? <img src={portal.logo} className="h-8 object-contain" /> : <Shield className="w-6 h-6 text-primary" />}
+            {portal?.logo ? (
+              <img 
+                src={portal.logo} 
+                className="h-8 object-contain cursor-pointer" 
+                onClick={() => navigate(`/${portalSlug}`)}
+              />
+            ) : (
+              <Shield className="w-6 h-6 text-primary" />
+            )}
+            <span className="font-display font-semibold text-lg text-gray-900 tracking-tight">
+              {portal?.name || "Carregando..."}
+            </span>
           </div>
 
           <nav className="hidden md:flex items-center gap-6">
@@ -325,6 +336,20 @@ export default function TournamentDetail() {
            </div>
         )}
       </main>
+      
+      {/* Sponsors Grid */}
+      {portal?.sponsors && JSON.parse(portal.sponsors).length > 0 && (
+        <section className="py-16 bg-gray-50 border-t border-gray-100">
+           <div className="container">
+              <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-center mb-10">Parceiros & Patrocinadores</h2>
+              <div className="flex flex-wrap items-center justify-center gap-12 transition-all duration-500">
+                 {JSON.parse(portal.sponsors).map((src: string, idx: number) => (
+                    <img key={idx} src={src} className="max-h-16 w-auto object-contain hover:scale-105 transition-transform duration-300" alt="Patrocinador" />
+                 ))}
+              </div>
+           </div>
+        </section>
+      )}
 
       {editingMatch && (
         <ScoreModal 
