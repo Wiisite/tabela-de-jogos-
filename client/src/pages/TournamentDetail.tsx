@@ -35,7 +35,7 @@ import {
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-type Sport = "football" | "basketball" | "volleyball" | "futsal";
+type Sport = "football" | "basketball" | "volleyball" | "futsal" | "handball";
 type Tab = "groups" | "standings" | "bracket" | "teams";
 
 const SPORT_CONFIG: Record<Sport, any> = {
@@ -43,6 +43,7 @@ const SPORT_CONFIG: Record<Sport, any> = {
   basketball: { label: "Basquete", emoji: "🏀", scoreLabel: "Pontos", proLabel: "PP", contraLabel: "PC", saldoLabel: "SP", hasPenalties: false },
   volleyball: { label: "Vôlei",    emoji: "🏐", scoreLabel: "Sets",   proLabel: "SP", contraLabel: "SC", saldoLabel: "SS", hasPenalties: false },
   futsal:     { label: "Futsal",   emoji: "👟", scoreLabel: "Gols",   proLabel: "GP", contraLabel: "GC", saldoLabel: "SG", hasPenalties: true },
+  handball:   { label: "Handebol", emoji: "🤾", scoreLabel: "Gols",   proLabel: "GP", contraLabel: "GC", saldoLabel: "SG", hasPenalties: true },
 };
 
 const PHASE_LABEL_MAP: Record<string, string> = {
@@ -416,7 +417,7 @@ function MatchCard({ match, teams, isAdmin, onEdit }: any) {
 }
 
 function StandingsTable({ standings, title, sport }: any) {
-  const sc = SPORT_CONFIG[sport as Sport ?? "football"];
+  const sc = SPORT_CONFIG[sport as Sport] || SPORT_CONFIG.football;
   return (
     <div className="mb-12">
       {title && <h3 className="text-lg font-bold text-gray-900 mb-4 px-4 border-l-4 border-gold">Grupo {title}</h3>}
