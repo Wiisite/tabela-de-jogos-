@@ -2,7 +2,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
 import { useLocation, useParams } from "wouter";
-import { Trophy, ArrowLeft, Plus, Trash2, Shield, ImageIcon, Users, RefreshCcw } from "lucide-react";
+import { Trophy, ArrowLeft, Plus, Trash2, Shield, ImageIcon, Users, RefreshCcw, Star } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -43,6 +43,8 @@ export default function EditTournament() {
   const [isDoubleRound, setIsDoubleRound] = useState<boolean>(false);
   const [teams, setTeams] = useState<TeamInput[]>([]);
   const [regenerateMatches, setRegenerateMatches] = useState(false);
+  const [slider, setSlider] = useState<string[]>([]);
+  const [sponsors, setSponsors] = useState<string[]>([]);
   const [heroSlider, setHeroSlider] = useState<string[]>([]);
   const [heroTitleColor, setHeroTitleColor] = useState("");
   const [heroSubtitleColor, setHeroSubtitleColor] = useState("");
@@ -50,7 +52,7 @@ export default function EditTournament() {
   const [secondaryColor, setSecondaryColor] = useState("");
   const [fontFamily, setFontFamily] = useState("Inter");
   const [description, setDescription] = useState("");
-  const [regulation, setRegulation] = useState(source?.tournament.regulation);
+  const [regulation, setRegulation] = useState<string | null | undefined>(null);
 
   const { data: source, isLoading: dataLoading } = trpc.tournament.getById.useQuery({ id: tournamentId });
   const { data: portal } = trpc.portal.getBySlug.useQuery({ slug: portalSlug ?? "" }, { enabled: !!portalSlug });
