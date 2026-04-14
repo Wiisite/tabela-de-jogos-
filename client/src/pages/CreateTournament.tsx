@@ -4,7 +4,7 @@ import { trpc } from "@/lib/trpc";
 import { getLoginUrl } from "@/const";
 import { useLocation, useParams } from "wouter";
 import { Trophy, ArrowLeft, Plus, Trash2, Shield, Shuffle, ImageIcon, Users } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 const TEAM_COLORS = [

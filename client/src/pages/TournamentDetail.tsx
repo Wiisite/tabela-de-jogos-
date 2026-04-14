@@ -267,12 +267,24 @@ export default function TournamentDetail() {
         </div>
 
         {activeTab === "groups" && (
-          <div className="space-y-4">
+          <div className="space-y-10">
             {matches.filter(m => m.phase === "group").length === 0 ? (
                <div className="p-20 text-center text-gray-400 border-2 border-dashed border-gray-100 rounded-3xl">Tabela em processamento...</div>
-            ) : matches.filter(m => m.phase === "group").map(m => (
-               <MatchCard key={m.id} match={m} teams={teams} isAdmin={isAdmin} onEdit={setEditingMatch} />
-            ))}
+            ) : (
+               Array.from(new Set(matches.filter(m => m.phase === "group").map(m => m.round))).sort((a,b) => a-b).map(round => (
+                  <div key={round} className="space-y-4">
+                     <h3 className="text-sm font-black text-gray-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-3">
+                        <div className="w-10 h-px bg-gray-100" />
+                        {round}ª Rodada
+                     </h3>
+                     <div className="space-y-4">
+                        {matches.filter(m => m.phase === "group" && m.round === round).map(m => (
+                           <MatchCard key={m.id} match={m} teams={teams} isAdmin={isAdmin} onEdit={setEditingMatch} />
+                        ))}
+                     </div>
+                  </div>
+               ))
+            )}
           </div>
         )}
 
@@ -299,9 +311,11 @@ export default function TournamentDetail() {
                  <div className="p-20 text-center text-gray-400 border-2 border-dashed border-gray-100 rounded-3xl">As eliminatórias serão liberadas ao fim da fase de grupos.</div>
               ) : (
                  <>
-                    <BracketView bracket={bracket} teams={teams} />
-                    <div className="mt-12 space-y-4">
-                       <h3 className="text-xl font-bold mb-4">Detalhes das Partidas</h3>
+                    <BracketView bracket={bracket} teams={teams} isAdmin={isAdmin} onEdit={setEditingMatch} />
+                    <div className="mt-12 space-y-8">
+                       <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                          <Swords className="w-5 h-5 text-gold" /> Detalhes das Partidas
+                       </h3>
                        {bracket.semifinal.map((m:any) => <MatchCard key={m.id} match={m} teams={teams} isAdmin={isAdmin} onEdit={setEditingMatch} />)}
                        {bracket.final.map((m:any) => <MatchCard key={m.id} match={m} teams={teams} isAdmin={isAdmin} onEdit={setEditingMatch} />)}
                        {bracket.third_place.map((m:any) => <MatchCard key={m.id} match={m} teams={teams} isAdmin={isAdmin} onEdit={setEditingMatch} />)}
@@ -419,15 +433,25 @@ function StandingsTable({ standings, title, sport }: any) {
   );
 }
 
-function BracketView({ bracket, teams }: any) {
+function BracketView({ bracket, teams, isAdmin, onEdit }: any) {
   const BracketMatch = ({ match, label }: any) => {
     const home = teams.find((t:any) => t.id === match.homeTeamId);
     const away = teams.find((t:any) => t.id === match.awayTeamId);
     const winId = match.status === 'finished' ? (match.homeScore + (match.homePenalties||0) >= match.awayScore + (match.awayPenalties||0) ? match.homeTeamId : match.awayTeamId) : null;
 
     return (
-      <div className="bg-white border border-gray-100 rounded-[1.5rem] overflow-hidden w-64 shadow-premium mb-6">
-        <div className="px-4 py-2 bg-gray-50 border-b border-gray-100 text-[10px] font-black text-gray-400 uppercase">{label}</div>
+      <div className="bg-white border border-gray-100 rounded-[1.5rem] overflow-hidden w-64 shadow-premium mb-6 group relative">
+        <div className="px-4 py-2 bg-gray-50 border-b border-gray-100 text-[10px] font-black text-gray-400 uppercase flex items-center justify-between">
+           {label}
+           {isAdmin && (
+              <button 
+                onClick={() => onEdit(match)}
+                className="opacity-0 group-hover:opacity-100 transition-opacity text-gold hover:text-amber-600 font-bold"
+              >
+                EDITAR
+              </button>
+           )}
+        </div>
         {[ { t: home, s: match.homeScore, p: match.homePenalties, id: match.homeTeamId },
            { t: away, s: match.awayScore, p: match.awayPenalties, id: match.awayTeamId } ].map((side, i) => (
           <div key={i} className={`flex items-center justify-between px-4 py-4 ${i === 0 ? "border-b border-gray-50" : ""} ${winId === side.id ? "bg-gold/5" : ""}`}>
