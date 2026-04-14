@@ -333,8 +333,8 @@ export default function TournamentDetail() {
           teams={teams} 
           sport={tournament.sport as Sport}
           onClose={() => setEditingMatch(null)} 
-          onSave={(matchId, h, a, hp, ap, date, time, loc) => updateScore.mutate({ matchId, homeScore: h, awayScore: a, homePenalties: hp, awayPenalties: ap, matchDate: date, matchTime: time, location: loc })}
-          onReset={(matchId) => resetScore.mutate({ matchId })}
+          onSave={(matchId: number, h: number, a: number, hp: number | undefined, ap: number | undefined, date: string, time: string, loc: string) => updateScore.mutate({ matchId, homeScore: h, awayScore: a, homePenalties: hp, awayPenalties: ap, matchDate: date, matchTime: time, location: loc })}
+          onReset={(matchId: number) => resetScore.mutate({ matchId })}
         />
       )}
     </div>

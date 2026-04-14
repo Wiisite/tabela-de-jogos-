@@ -622,6 +622,9 @@ const matchRouter = router({
         awayScore: z.number().min(0),
         homePenalties: z.number().optional(),
         awayPenalties: z.number().optional(),
+        matchDate: z.string().optional(),
+        matchTime: z.string().optional(),
+        location: z.string().optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -631,6 +634,10 @@ const matchRouter = router({
       await updateMatchScore(input.matchId, input.homeScore, input.awayScore, 
         input.homePenalties !== undefined ? { home: input.homePenalties, away: input.awayPenalties! } : undefined
       );
+
+      if (input.matchDate || input.matchTime || input.location) {
+        await updateMatchDetails(input.matchId, input.matchDate, input.matchTime, input.location);
+      }
 
       // If final match finished, set champion
       if (match.phase === "final") {
