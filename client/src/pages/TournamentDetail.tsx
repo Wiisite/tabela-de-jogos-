@@ -53,6 +53,14 @@ const PHASE_LABEL_MAP: Record<string, string> = {
   third_place: "Disputa de 3º Lugar",
 };
 
+const SPORT_ART: Record<string, string> = {
+  football: "/brain/9c18285e-a3c8-45b3-b659-64f993ac0354/art_football_clean_1776170692238.png",
+  futsal: "/brain/9c18285e-a3c8-45b3-b659-64f993ac0354/art_futsal_clean_final_1776171009780.png",
+  basketball: "/brain/9c18285e-a3c8-45b3-b659-64f993ac0354/art_basketball_clean_v2_1776170721649.png",
+  handball: "/brain/9c18285e-a3c8-45b3-b659-64f993ac0354/art_handball_clean_v2_1776170743608.png",
+  volleyball: "/brain/9c18285e-a3c8-45b3-b659-64f993ac0354/art_volleyball_1776170449396.png",
+};
+
 export default function TournamentDetail() {
   const { id, portalSlug } = useParams<{ id: string; portalSlug?: string }>();
   const tournamentId = parseInt(id ?? "0");
@@ -201,42 +209,77 @@ export default function TournamentDetail() {
 
       <main className="container pt-6 pb-20">
         {/* HERO SECTION WITH OPTIONAL SLIDER */}
-        <div className="relative w-full h-[320px] sm:h-[480px] rounded-[2rem] overflow-hidden mb-10 shadow-2xl bg-zinc-900">
-           {sliderImgs.length > 0 ? (
-              sliderImgs.map((img, idx) => (
-                <div key={idx} className={`absolute inset-0 transition-opacity duration-1000 ${idx === currentSlide ? "opacity-100" : "opacity-0"}`}>
-                   <img src={img} className="w-full h-full object-cover" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-                </div>
-              ))
-           ) : (
-              <div className="absolute inset-0 bg-primary/20">
-                 {portal?.banner && <img src={portal.banner} className="w-full h-full object-cover opacity-40" />}
-                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
-              </div>
-           )}
-           
-           <div className="absolute inset-0 flex flex-col justify-end p-8 sm:p-12">
-              <div className="flex gap-2 mb-4">
-                 <span className="px-3 py-1 bg-gold/20 border border-gold/30 backdrop-blur-md text-gold text-[10px] font-bold uppercase rounded-full">{sportCfg.emoji} {sportCfg.label}</span>
-                 <span className="px-3 py-1 bg-white/10 backdrop-blur-md text-white border border-white/20 text-[10px] font-bold uppercase rounded-full">{tournament.category}</span>
-              </div>
-              <h1 className="font-display text-4xl sm:text-7xl font-bold mb-4 drop-shadow-2xl" style={{ color: titleColor }}>{tournament.name}</h1>
-              <div className="flex flex-wrap gap-6 text-sm font-medium" style={{ color: subtitleColor }}>
-                 <span className="flex items-center gap-2"><Users className="w-4 h-4 text-gold" /> {teams.length} Equipes</span>
-                 <span className="flex items-center gap-2"><Swords className="w-4 h-4 text-gold" /> {matches.length} Partidas</span>
-                 {tournament.champion && <span className="flex items-center gap-2 text-gold font-bold"><Trophy className="w-4 h-4 fill-gold" /> Campeão: {tournament.champion}</span>}
-              </div>
-           </div>
+        <section className="relative w-full h-[320px] sm:h-[480px] rounded-[2rem] overflow-hidden mb-10 shadow-2xl bg-zinc-900 border border-gray-100 flex flex-col justify-center">
+            {sliderImgs.length > 0 ? (
+               <div className="w-full h-full relative">
+                  {sliderImgs.map((src, i) => (
+                     <div key={i} className={`absolute inset-0 transition-opacity duration-1000 ${i === currentSlide ? "opacity-100" : "opacity-0"}`}>
+                        <img src={src} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                     </div>
+                  ))}
+               </div>
+            ) : (
+               <div className="absolute inset-0 bg-white">
+                  {/* CSS Dot Patterns */}
+                  <div className="absolute inset-0 hero-dots-top" />
+                  <div className="absolute inset-0 hero-dots-bottom" />
+                  
+                  {/* Sport Stylized Art */}
+                  {SPORT_ART[tournament.sport] && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <img 
+                        src={SPORT_ART[tournament.sport]} 
+                        className="h-[80%] w-auto object-contain opacity-40 mix-blend-multiply" 
+                        alt={tournament.sport} 
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Gradient Overlay for Text legibility */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-white via-white/20 to-transparent" />
+               </div>
+            )}
 
-           {sliderImgs.length > 1 && (
-              <div className="absolute bottom-6 right-10 flex gap-2">
-                 {sliderImgs.map((_, idx) => (
-                    <button key={idx} onClick={() => setCurrentSlide(idx)} className={`w-2 h-2 rounded-full transition-all ${idx === currentSlide ? "bg-gold w-8" : "bg-white/30"}`} />
-                 ))}
-              </div>
-           )}
-        </div>
+            <div className="container relative py-12 text-center pointer-events-none z-10">
+               <h1 
+                 className={`font-display text-4xl sm:text-6xl font-black mb-4 ${sliderImgs.length > 0 ? 'text-white drop-shadow-lg' : 'text-[#1e3a8a]'} uppercase italic tracking-tighter`}
+                 style={{ color: sliderImgs.length === 0 ? (tournament.heroTitleColor || '#1e3a8a') : (tournament.heroTitleColor || 'white') }}
+               >
+                  {tournament.name}
+               </h1>
+               <div className="flex flex-wrap items-center justify-center gap-4 mb-2">
+                  <span 
+                    className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest ${sliderImgs.length > 0 ? 'bg-black/40 text-white backdrop-blur-md' : 'bg-gray-100 text-gray-500'}`}
+                    style={sliderImgs.length === 0 && tournament.heroSubtitleColor ? { color: tournament.heroSubtitleColor } : {}}
+                  >
+                     {sportCfg.emoji} {sportCfg.label}
+                  </span>
+                  <span 
+                    className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest ${sliderImgs.length > 0 ? 'bg-gold text-amber-950 shadow-gold' : 'bg-gold/10 text-gold border border-gold/20'}`}
+                  >
+                     <Star className="w-3 h-3 fill-current" />
+                     {tournament.category}
+                  </span>
+                  {tournament.champion && (
+                    <span 
+                      className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest ${sliderImgs.length > 0 ? 'bg-gold text-amber-950 shadow-gold' : 'bg-gold/10 text-gold border border-gold/20'}`}
+                    >
+                      <Trophy className="w-3 h-3 fill-current" />
+                      Campeão: {tournament.champion}
+                    </span>
+                  )}
+               </div>
+            </div>
+
+            {sliderImgs.length > 1 && (
+               <div className="absolute bottom-6 right-10 flex gap-2 z-20 pointer-events-auto">
+                  {sliderImgs.map((_, idx) => (
+                     <button key={idx} onClick={() => setCurrentSlide(idx)} className={`w-2 h-2 rounded-full transition-all ${idx === currentSlide ? "bg-gold w-8" : "bg-white/30"}`} />
+                  ))}
+               </div>
+            )}
+        </section>
 
         {tournament.description && (
           <section className="mb-10 p-8 bg-white border border-gray-100 rounded-3xl shadow-sm">
