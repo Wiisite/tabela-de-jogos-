@@ -225,11 +225,6 @@ export async function updateTournament(
     primaryColor?: string | null;
     secondaryColor?: string | null;
     fontFamily?: string | null;
-    slider?: string | null;
-    sponsors?: string | null;
-    primaryColor?: string | null;
-    secondaryColor?: string | null;
-    fontFamily?: string | null;
     heroTitleColor?: string | null;
     heroSubtitleColor?: string | null;
     heroSlider?: string | null;
