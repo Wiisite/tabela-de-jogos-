@@ -94,8 +94,8 @@ export default function AdminLogin() {
             <div className="space-y-2">
               <div className="relative">
                 <Input
-                  type="email"
-                  placeholder="E-mail (Para login master)"
+                  type="text"
+                  placeholder="E-mail ou Usuário (admin)"
                   className="pl-10 h-12 bg-background/50 border-border/60"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
