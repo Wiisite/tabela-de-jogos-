@@ -64,7 +64,7 @@ export default function Home() {
       document.documentElement.style.removeProperty('--primary');
       document.documentElement.style.removeProperty('--gold');
       document.documentElement.style.fontFamily = "Inter";
-      document.title = "LEG - LIGA DAS ESCOLAS DE GUARULHOS";
+      document.title = "LEG - LIGA ESCOLAR GUARULHENSE";
     }
   }, [portal]);
 
