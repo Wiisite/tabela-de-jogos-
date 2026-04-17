@@ -7,19 +7,36 @@ let _db: ReturnType<typeof drizzle> | null = null;
 let _connectionErrorLogged = false;
 
 export async function getDb() {
-  if (!_db && process.env.DATABASE_URL) {
+  if (_db) return _db;
+
+  const urlsToTry = [
+    process.env.DATABASE_URL,
+    "mysql://root:password@db:3306/tournament_pro",
+    "mysql://root:password@localhost:3306/tournament_pro"
+  ].filter(Boolean) as string[];
+
+  for (const url of urlsToTry) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
-      _connectionErrorLogged = false;
-    } catch (error) {
+      _db = drizzle(url);
+      // Test the connection immediately with a dummy query
+      await _db.execute(require("drizzle-orm").sql`SELECT 1`);
+      
       if (!_connectionErrorLogged) {
-        console.error("[Database] Falha crítica de conexão. Verifique o Docker (db:3306).");
-        _connectionErrorLogged = true;
+        console.log(`[Database] Conectado com sucesso via: ${url.includes('db:') ? 'Docker Network' : 'Localhost'}`);
       }
+      _connectionErrorLogged = false;
+      return _db;
+    } catch (e) {
       _db = null;
+      continue; // Try next URL
     }
   }
-  return _db;
+
+  if (!_connectionErrorLogged) {
+    console.error("[Database] Não foi possível conectar a nenhum host de banco de dados (db ou localhost).");
+    _connectionErrorLogged = true;
+  }
+  return null;
 }
 
 /**
