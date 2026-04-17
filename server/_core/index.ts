@@ -47,23 +47,28 @@ async function startServer() {
   app.post("/api/admin/login", async (req, res) => {
     const { email, password, portalId } = req.body;
     
-    // 1. Super Admin Check (Global Env Var)
+    // 1. Super Admin Check (Global Env Var) - BYPASS DB
     if (password === process.env.ADMIN_PASSWORD && (!email || email === 'admin')) {
       const token = await sdk.createSessionToken(ENV.ownerOpenId, { name: "Super Admin" });
       const cookieOptions = getSessionCookieOptions(req);
       res.cookie(COOKIE_NAME, token, cookieOptions);
+      console.log("[Auth] Super Admin bypass login successful.");
       return res.json({ success: true, role: 'admin' });
     }
 
     // 2. Database User Check (Email + Password)
-    if (email) {
-      const user = await db.getUserByEmail(email);
-      if (user && user.role === 'admin' && user.password === password) {
-        const token = await sdk.createSessionToken(user.openId, { name: user.name || "Admin" });
-        const cookieOptions = getSessionCookieOptions(req);
-        res.cookie(COOKIE_NAME, token, cookieOptions);
-        return res.json({ success: true, role: 'admin', portalId: user.portalId });
+    try {
+      if (email) {
+        const user = await db.getUserByEmail(email);
+        if (user && user.role === 'admin' && user.password === password) {
+          const token = await sdk.createSessionToken(user.openId, { name: user.name || "Admin" });
+          const cookieOptions = getSessionCookieOptions(req);
+          res.cookie(COOKIE_NAME, token, cookieOptions);
+          return res.json({ success: true, role: 'admin', portalId: user.portalId });
+        }
       }
+    } catch (e) {
+      console.warn("[Auth] Database check failed, falling back to bypass logic only.");
     }
 
     // 3. Portal Admin Check (Portal specific password)

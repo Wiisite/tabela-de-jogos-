@@ -131,7 +131,7 @@ export default function AdminLogin() {
             </Button>
             <div className="mt-4 text-center">
               <p className="text-xs text-muted-foreground font-bold">
-                Não tem uma conta?{" "}
+                Não tem um acesso?{" "}
                 <button 
                   type="button"
                   onClick={() => navigate("/register")}
