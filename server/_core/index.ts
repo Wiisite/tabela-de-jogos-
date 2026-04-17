@@ -128,6 +128,43 @@ async function startServer() {
       return res.status(500).json({ error: "Falha ao acessar o banco de dados. Verifique se o MySQL está rodando." });
     }
   });
+
+  // Admin Registration Route
+  app.post("/api/admin/register", async (req, res) => {
+    const { name, email, password } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: "Todos os campos são obrigatórios" });
+    }
+
+    try {
+      const database = await db.getDb();
+      if (!database) throw new Error("Database not connected");
+
+      const { users: usersTable } = await import("../../drizzle/schema");
+      
+      // Check if user already exists
+      const existingUser = await db.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ error: "Este e-mail já está cadastrado" });
+      }
+
+      await database.insert(usersTable).values({
+        openId: `local_${Date.now()}`,
+        name,
+        email,
+        password, // Plain text as per current project standard (should be hashed in production)
+        role: "admin",
+        lastSignedIn: new Date()
+      });
+
+      return res.json({ success: true, message: "Administrador cadastrado com sucesso!" });
+    } catch (e) {
+      console.error("[Register] Failed to register admin:", e);
+      return res.status(500).json({ error: "Erro ao cadastrar administrador. Verifique o banco de dados." });
+    }
+  });
+
   // tRPC API
   app.use(
     "/api/trpc",

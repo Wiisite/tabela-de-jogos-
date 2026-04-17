@@ -10,6 +10,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import CreateTournament from "./pages/CreateTournament";
 import CreatePortal from "./pages/CreatePortal";
 import AdminLogin from "./pages/AdminLogin";
+import AdminRegister from "./pages/AdminRegister";
 
 import EditTournament from "./pages/EditTournament";
 
@@ -20,6 +21,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/login-admin" component={AdminLogin} />
+      <Route path="/register" component={AdminRegister} />
       <Route path="/create-portal" component={CreatePortal} />
 
       {/* Rotas de Portal (Tenant) */}
