@@ -57,6 +57,7 @@ export default function AdminDashboard() {
     enabled: isSuperAdmin && !portalSlug,
   });
 
+  const { data: tournaments } = trpc.tournament.list.useQuery(
     { portalId: portal?.id },
     { enabled: isAuthenticated && (isSuperAdmin || !!portal) }
   );
