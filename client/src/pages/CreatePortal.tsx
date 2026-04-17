@@ -91,7 +91,7 @@ export default function CreatePortal() {
                 <Label htmlFor="name">Nome da Liga</Label>
                 <Input
                   id="name"
-                  placeholder="Ex: Liga das Escolas de Guarulhos"
+                  placeholder="Ex: Liga Escolar Guarulhense"
                   value={formData.name}
                   onChange={(e) => {
                     const val = e.target.value;
@@ -114,7 +114,7 @@ export default function CreatePortal() {
                   </div>
                   <Input
                     id="slug"
-                    placeholder="ex: legg"
+                    placeholder="ex: ligaguarulhos"
                     value={formData.slug}
                     onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') }))}
                     className="bg-background/50 font-mono"

@@ -129,6 +129,18 @@ export default function AdminLogin() {
                 "Acessar Painel"
               )}
             </Button>
+            <div className="mt-4 text-center">
+              <p className="text-xs text-muted-foreground font-bold">
+                Não tem uma conta?{" "}
+                <button 
+                  type="button"
+                  onClick={() => navigate("/register")}
+                  className="text-gold hover:underline"
+                >
+                  Crie seu acesso de admin aqui
+                </button>
+              </p>
+            </div>
           </CardFooter>
         </form>
       </Card>
