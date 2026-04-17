@@ -712,7 +712,12 @@ const seedRouter = router({
 // ─── App Router ────────────────────────────────────────────────────────────────
 
 export const appRouter = router({
-  system: systemRouter,
+  system: router({
+    dbHealth: publicProcedure.query(async () => {
+      const { checkConnection } = await import("./db");
+      return { ok: await checkConnection() };
+    }),
+  }),
   auth: router({
     me: publicProcedure.query((opts) => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

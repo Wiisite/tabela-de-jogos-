@@ -4,20 +4,37 @@ import { InsertUser, matches, teams, tournaments, users, portals } from "../driz
 import { ENV } from "./_core/env";
 
 let _db: ReturnType<typeof drizzle> | null = null;
+let _connectionErrorLogged = false;
 
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
       _db = drizzle(process.env.DATABASE_URL);
-      console.log("[Database] Initialized successfully.");
+      _connectionErrorLogged = false;
     } catch (error) {
-      console.error("[Database] Failed to connect:", error);
+      if (!_connectionErrorLogged) {
+        console.error("[Database] Falha crítica de conexão. Verifique o Docker (db:3306).");
+        _connectionErrorLogged = true;
+      }
       _db = null;
     }
-  } else if (!_db) {
-    console.warn("[Database] DATABASE_URL is missing!");
   }
   return _db;
+}
+
+/**
+ * Health check for DB connection
+ */
+export async function checkConnection(): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  try {
+    // A simple query to test connection
+    await db.execute(require("drizzle-orm").sql`SELECT 1`);
+    return true;
+  } catch (e) {
+    return false;
+  }
 }
 
 // ─── Users ─────────────────────────────────────────────────────────────────────

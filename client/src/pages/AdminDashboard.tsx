@@ -15,6 +15,8 @@ import {
   LayoutGrid,
   Settings,
   Trash2,
+  Database,
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -55,10 +57,13 @@ export default function AdminDashboard() {
     enabled: isSuperAdmin && !portalSlug,
   });
 
-  const { data: tournaments } = trpc.tournament.list.useQuery(
     { portalId: portal?.id },
     { enabled: isAuthenticated && (isSuperAdmin || !!portal) }
   );
+  
+  const { data: dbHealth } = trpc.system.dbHealth.useQuery(undefined, {
+    refetchInterval: 10000, // Check every 10s
+  });
 
   const utils = trpc.useUtils();
   const deletePortal = trpc.portal.delete.useMutation({
@@ -110,6 +115,18 @@ export default function AdminDashboard() {
                 {isSuperAdmin && !portalSlug ? "Super Admin" : portal?.name || "Admin"}
               </span>
             </div>
+            {dbHealth && !dbHealth.ok && (
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-bold animate-pulse">
+                <AlertTriangle className="w-3 h-3" />
+                DATABASE OFFLINE
+              </div>
+            )}
+            {dbHealth?.ok && (
+              <div className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-green-500 text-[10px] font-bold">
+                <Database className="w-3 h-3" />
+                DB ONLINE
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground hidden sm:block">{user?.name}</span>
