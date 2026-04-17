@@ -68,32 +68,65 @@ async function startServer() {
 
     // 3. Portal Admin Check (Portal specific password)
     if (portalId) {
-      const portal = (await import("../db")).getPortalBySlug; // Wait, let's use a more direct way
-      const db = await import("../db");
-      const portals = await db.getAllPortals();
-      const targetPortal = portals.find(p => p.id === portalId);
+      try {
+        const db = await import("../db");
+        const portals = await db.getAllPortals();
+        const targetPortal = portals.find(p => p.id === portalId);
 
-      if (targetPortal && targetPortal.adminPassword && password === targetPortal.adminPassword) {
-        // Create a special openId for portal admins or just use a placeholder
-        const portalAdminOpenId = `portal_admin_${targetPortal.id}`;
-        
-        // Ensure user exists in DB for session validation
-        await db.upsertUser({
-          openId: portalAdminOpenId,
-          name: `${targetPortal.name} Admin`,
-          role: 'admin',
-          // We can't easily store portalId in user table without schema change, 
-          // but we can imply it from the openId or a naming convention
-        });
+        if (targetPortal && targetPortal.adminPassword && password === targetPortal.adminPassword) {
+          const portalAdminOpenId = `portal_admin_${targetPortal.id}`;
+          await db.upsertUser({
+            openId: portalAdminOpenId,
+            name: `${targetPortal.name} Admin`,
+            role: 'admin',
+          });
 
-        const token = await sdk.createSessionToken(portalAdminOpenId, { name: `${targetPortal.name} Admin` });
-        const cookieOptions = getSessionCookieOptions(req);
-        res.cookie(COOKIE_NAME, token, cookieOptions);
-        return res.json({ success: true, role: 'admin', portalId: targetPortal.id });
+          const token = await sdk.createSessionToken(portalAdminOpenId, { name: `${targetPortal.name} Admin` });
+          const cookieOptions = getSessionCookieOptions(req);
+          res.cookie(COOKIE_NAME, token, cookieOptions);
+          return res.json({ success: true, role: 'admin', portalId: targetPortal.id });
+        }
+      } catch (e) {
+        console.error("[Login] Portal check failed (DB likely down):", e);
       }
     }
 
     res.status(401).json({ error: "Senha incorreta ou portal não encontrado" });
+  });
+
+  // Emergency Password Rescue Route
+  app.post("/api/admin/rescue", async (req, res) => {
+    const { password, email } = req.body;
+
+    if (!password || password !== process.env.ADMIN_PASSWORD) {
+      return res.status(403).json({ error: "Chave de resgate inválida" });
+    }
+
+    if (!email) {
+      return res.status(400).json({ error: "E-mail alvo é obrigatório" });
+    }
+
+    try {
+      const database = await db.getDb();
+      if (!database) throw new Error("Database not connected");
+
+      const { users: usersTable } = await import("../../drizzle/schema");
+      await database.insert(usersTable).values({
+        openId: `rescue_${Date.now()}`,
+        name: "Admin Restaurado",
+        email: email,
+        password: password,
+        role: "admin",
+        lastSignedIn: new Date()
+      }).onDuplicateKeyUpdate({
+        set: { password, role: "admin" }
+      });
+
+      return res.json({ success: true, message: `Acesso restaurado para ${email}` });
+    } catch (e) {
+      console.error("[Rescue] Failed to rescue admin:", e);
+      return res.status(500).json({ error: "Falha ao acessar o banco de dados. Verifique se o MySQL está rodando." });
+    }
   });
   // tRPC API
   app.use(
